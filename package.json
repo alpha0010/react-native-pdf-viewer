@@ -1,5 +1,5 @@
 {
-  "name": "react-native-pdf-viewer",
+  "name": "react-native-pdf-light",
   "version": "0.1.0",
   "description": "PDF viewer for React Native",
   "main": "lib/commonjs/index",
@@ -13,7 +13,7 @@
     "android",
     "ios",
     "cpp",
-    "react-native-pdf-viewer.podspec",
+    "react-native-pdf-light.podspec",
     "!lib/typescript/example",
     "!**/__tests__",
     "!**/__fixtures__",

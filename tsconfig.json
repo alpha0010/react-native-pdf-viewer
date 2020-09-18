@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "react-native-pdf-viewer": ["./src/index"]
+      "react-native-pdf-light": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

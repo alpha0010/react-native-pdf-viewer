@@ -1,6 +1,6 @@
 {
   "name": "react-native-pdf-viewer-example",
-  "description": "Example app for react-native-pdf-viewer",
+  "description": "Example app for react-native-pdf-light",
   "version": "0.0.1",
   "private": true,
   "scripts": {

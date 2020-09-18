@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pdf, PdfUtil } from 'react-native-pdf-viewer';
+import { Pdf, PdfUtil } from 'react-native-pdf-light';
 
 export default function App() {
   const [source, setSource] = useState<string | null>(null);

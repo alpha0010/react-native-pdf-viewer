@@ -1,21 +1,21 @@
-# react-native-pdf-viewer
+# react-native-pdf-light
 
 PDF viewer for React Native
 
 ## Installation
 
 ```sh
-npm install react-native-pdf-viewer
+npm install react-native-pdf-light
 ```
 
 ## Usage
 
 ```js
-import PdfViewer from "react-native-pdf-viewer";
+import { Pdf } from 'react-native-pdf-light';
 
 // ...
 
-const result = await PdfViewer.multiply(3, 7);
+<Pdf source={source} />
 ```
 
 ## Contributing
