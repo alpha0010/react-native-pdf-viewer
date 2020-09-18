@@ -26,8 +26,14 @@ class PdfViewManager : BaseViewManager<PdfView, PdfViewShadowNode>() {
   override fun updateExtraData(root: PdfView, extraData: Any?) {}
 
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-  @ReactProp(name = "src")
-  fun setSrc(view: PdfView, source: String?) {
-    view.setPdfSource(source ?: "")
+  @ReactProp(name = "page", defaultInt = 0)
+  fun setPage(view: PdfView, page: Int) {
+    view.setPage(page)
+  }
+
+  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+  @ReactProp(name = "source")
+  fun setSource(view: PdfView, source: String?) {
+    view.setSource(source ?: "")
   }
 }

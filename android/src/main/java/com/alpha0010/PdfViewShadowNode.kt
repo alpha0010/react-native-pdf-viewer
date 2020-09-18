@@ -14,8 +14,10 @@ import java.io.File
 import java.io.FileNotFoundException
 
 class PdfViewShadowNode : LayoutShadowNode(), YogaMeasureFunction {
-  private var mPageHeight: Float = 1f
-  private var mPageWidth: Float = 1f
+  private var mPage = 0
+  private var mPageHeight = 1f
+  private var mPageWidth = 1f
+  private var mSource = ""
 
   init {
     setMeasureFunction(this)
@@ -38,13 +40,8 @@ class PdfViewShadowNode : LayoutShadowNode(), YogaMeasureFunction {
   }
 
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-  @ReactProp(name = "src")
-  fun setSrc(source: String?) {
-    if (source == null) {
-      return
-    }
-
-    val file = File(source)
+  private fun measurePdf() {
+    val file = File(mSource)
     val fd: ParcelFileDescriptor
     try {
       fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
@@ -52,7 +49,7 @@ class PdfViewShadowNode : LayoutShadowNode(), YogaMeasureFunction {
       return
     }
     val renderer = PdfRenderer(fd)
-    val page = renderer.openPage(0)
+    val page = renderer.openPage(mPage)
     mPageHeight = page.height.toFloat()
     mPageWidth = page.width.toFloat()
     page.close()
@@ -60,5 +57,23 @@ class PdfViewShadowNode : LayoutShadowNode(), YogaMeasureFunction {
     fd.close()
 
     dirty()
+  }
+
+  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+  @ReactProp(name = "page", defaultInt = 0)
+  fun setPage(page: Int) {
+    if (mPage != page) {
+      mPage = page
+      measurePdf()
+    }
+  }
+
+  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+  @ReactProp(name = "source")
+  fun setSource(source: String?) {
+    if (source != null && mSource != source) {
+      mSource = source
+      measurePdf()
+    }
   }
 }

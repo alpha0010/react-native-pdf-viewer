@@ -12,6 +12,7 @@ import java.io.FileNotFoundException
 
 class PdfView(context: Context) : View(context) {
   private var mBitmap: Bitmap
+  private var mPage = 0
   private var mSource = ""
   private val mViewRect = Rect()
 
@@ -20,7 +21,13 @@ class PdfView(context: Context) : View(context) {
   }
 
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-  fun setPdfSource(source: String) {
+  fun setPage(page: Int) {
+    mPage = page
+    renderPdf()
+  }
+
+  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+  fun setSource(source: String) {
     mSource = source
     renderPdf()
   }
@@ -40,17 +47,17 @@ class PdfView(context: Context) : View(context) {
     }
 
     val renderer = PdfRenderer(fd)
-    val page = renderer.openPage(0)
+    val pdfPage = renderer.openPage(mPage)
 
     val transform = Matrix()
     transform.setRectToRect(
-      RectF(0f, 0f, page.width.toFloat(), page.height.toFloat()),
+      RectF(0f, 0f, pdfPage.width.toFloat(), pdfPage.height.toFloat()),
       RectF(0f, 0f, width.toFloat(), height.toFloat()),
       Matrix.ScaleToFit.CENTER
     )
     val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    page.render(bitmap, null, transform, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-    page.close()
+    pdfPage.render(bitmap, null, transform, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+    pdfPage.close()
     renderer.close()
     fd.close()
 

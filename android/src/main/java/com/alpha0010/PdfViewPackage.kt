@@ -7,7 +7,7 @@ import com.facebook.react.uimanager.ViewManager
 
 class PdfViewPackage : ReactPackage {
   override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-    return listOf<NativeModule>(PdfViewModule(reactContext))
+    return listOf<NativeModule>(PdfUtilModule(reactContext))
   }
 
   override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
