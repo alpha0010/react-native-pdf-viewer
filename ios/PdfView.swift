@@ -1,5 +1,5 @@
-@objc(PdfViewer)
-class PdfViewer: NSObject {
+@objc(PdfView)
+class PdfView: NSObject {
 
     @objc(multiply:withB:withResolver:withRejecter:)
     func multiply(a: Float, b: Float, resolve:RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {
