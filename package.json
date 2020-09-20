@@ -19,6 +19,7 @@
     "!android/.project",
     "!android/.settings",
     "!android/build",
+    "!android/gradle",
     "!lib/typescript/example",
     "!**/__tests__",
     "!**/__fixtures__",

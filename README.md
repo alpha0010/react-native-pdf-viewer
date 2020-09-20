@@ -1,6 +1,10 @@
 # react-native-pdf-light
 
-PDF viewer for React Native
+PDF viewer for React Native. Implemented with platform native render functions
+for smallest deploy size impact, and restricted feature set to simplify
+integration with larger systems.
+
+**NOTE:** Development is in early stages. There are likely performance issues.
 
 ## Installation
 
