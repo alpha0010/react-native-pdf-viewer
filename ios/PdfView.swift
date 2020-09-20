@@ -34,9 +34,8 @@ class PdfView: UIView {
         // Change context coordinate system to pdf coordinates
         context.translateBy(x: 0.0, y: frame.height)
         context.scaleBy(x: 1.0, y: -1.0)
-        context.concatenate(
-            pdfPage.getDrawingTransform(.cropBox, rect: frame, rotate: 0, preserveAspectRatio: true)
-        )
+        let pageBounds = pdfPage.getBoxRect(.cropBox)
+        context.scaleBy(x: frame.width / pageBounds.width, y: frame.height / pageBounds.height)
 
         context.interpolationQuality = .high
         context.setRenderingIntent(.defaultIntent)
