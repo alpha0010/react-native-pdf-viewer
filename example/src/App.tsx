@@ -7,5 +7,7 @@ export default function App() {
     PdfUtil.unpackAsset('sample.pdf').then(setSource);
   }, [setSource]);
 
-  return source == null ? null : <Pdf source={source} />;
+  return source == null ? null : (
+    <Pdf onError={console.warn} onLoadComplete={console.log} source={source} />
+  );
 }

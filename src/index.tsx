@@ -10,6 +10,18 @@ import {
 
 type PdfProps = {
   /**
+   * Callback to handle errors.
+   */
+  onError?: (error: Error) => void;
+
+  /**
+   * Callback to handle pdf load completion.
+   *
+   * Passed the page count of the loaded pdf.
+   */
+  onLoadComplete?: (numberOfPages: number) => void;
+
+  /**
    * Document to display.
    */
   source: string;
@@ -36,7 +48,7 @@ type PdfViewProps = {
    * Document to display.
    */
   source: string;
-  style: ViewStyle;
+  style?: ViewStyle;
 };
 
 /**
@@ -52,24 +64,33 @@ export const PdfView = requireNativeComponent<PdfViewProps>('RNPdfView');
 /**
  * Display a pdf.
  */
-export function Pdf(props: PdfProps) {
+export function Pdf({ onError, onLoadComplete, source }: PdfProps) {
   const [pageIndexes, setPageIndexes] = useState<number[]>([]);
   useEffect(() => {
     const state = { live: true };
-    PdfUtil.getPageCount(props.source).then((numPages) => {
-      if (state.live) {
-        const newIndexes: number[] = [];
-        for (let i = 0; i < numPages; ++i) {
-          newIndexes.push(i);
+    PdfUtil.getPageCount(source)
+      .then((numPages) => {
+        if (state.live) {
+          const newIndexes: number[] = [];
+          for (let i = 0; i < numPages; ++i) {
+            newIndexes.push(i);
+          }
+          setPageIndexes(newIndexes);
+          if (onLoadComplete != null) {
+            onLoadComplete(numPages);
+          }
         }
-        setPageIndexes(newIndexes);
-      }
-    });
+      })
+      .catch((error) => {
+        if (state.live && onError != null) {
+          onError(error);
+        }
+      });
 
     return () => {
       state.live = false;
     };
-  }, [props.source, setPageIndexes]);
+  }, [onError, onLoadComplete, setPageIndexes, source]);
 
   return (
     <FlatList
@@ -77,7 +98,7 @@ export function Pdf(props: PdfProps) {
       ItemSeparatorComponent={() => <View style={styles.separator} />}
       keyExtractor={(item) => item.toString()}
       renderItem={({ item }) => (
-        <PdfView page={item} source={props.source} style={styles.page} />
+        <PdfView page={item} source={source} style={styles.page} />
       )}
     />
   );
