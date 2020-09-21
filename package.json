@@ -1,6 +1,6 @@
 {
   "name": "react-native-pdf-light",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "PDF viewer for React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -103,6 +103,7 @@
     },
     "plugins": {
       "@release-it/conventional-changelog": {
+        "infile": "CHANGELOG.md",
         "preset": "angular"
       }
     }
