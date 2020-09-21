@@ -56,6 +56,7 @@ class PdfView(context: Context) : View(context) {
       Matrix.ScaleToFit.CENTER
     )
     val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    bitmap.eraseColor(Color.WHITE)
     pdfPage.render(bitmap, null, transform, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
     pdfPage.close()
     renderer.close()

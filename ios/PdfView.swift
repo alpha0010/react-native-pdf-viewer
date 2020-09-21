@@ -24,12 +24,15 @@ class PdfView: UIView {
             return
         }
 
-        UIGraphicsBeginImageContext(frame.size)
+        UIGraphicsBeginImageContextWithOptions(frame.size, true, 0.0)
         guard let context = UIGraphicsGetCurrentContext() else {
             UIGraphicsEndImageContext()
             return
         }
         context.saveGState()
+
+        UIColor.white.setFill()
+        context.fill(frame)
 
         // Change context coordinate system to pdf coordinates
         context.translateBy(x: 0.0, y: frame.height)
