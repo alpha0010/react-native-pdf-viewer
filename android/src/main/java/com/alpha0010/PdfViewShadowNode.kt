@@ -42,14 +42,19 @@ class PdfViewShadowNode : LayoutShadowNode(), YogaMeasureFunction {
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   private fun measurePdf() {
     val file = File(mSource)
-    val fd: ParcelFileDescriptor
-    try {
-      fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+    val fd = try {
+      ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
     } catch (e: FileNotFoundException) {
       return
     }
     val renderer = PdfRenderer(fd)
-    val page = renderer.openPage(mPage)
+    val page = try {
+      renderer.openPage(mPage)
+    } catch (e: Exception) {
+      renderer.close()
+      fd.close()
+      return
+    }
     mPageHeight = page.height.toFloat()
     mPageWidth = page.width.toFloat()
     page.close()

@@ -7,6 +7,10 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.view.View
 import androidx.annotation.RequiresApi
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
 
@@ -38,34 +42,43 @@ class PdfView(context: Context) : View(context) {
       return
     }
 
-    val file = File(mSource)
-    val fd: ParcelFileDescriptor
-    try {
-      fd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-    } catch (e: FileNotFoundException) {
-      return
+    CoroutineScope(Dispatchers.Main).launch(Dispatchers.IO) {
+      val file = File(mSource)
+      val fd = try {
+        ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+      } catch (e: FileNotFoundException) {
+        return@launch
+      }
+
+      val renderer = PdfRenderer(fd)
+      val pdfPage = try {
+        renderer.openPage(mPage)
+      } catch (e: Exception) {
+        renderer.close()
+        fd.close()
+        return@launch
+      }
+
+      val transform = Matrix()
+      transform.setRectToRect(
+        RectF(0f, 0f, pdfPage.width.toFloat(), pdfPage.height.toFloat()),
+        RectF(0f, 0f, width.toFloat(), height.toFloat()),
+        Matrix.ScaleToFit.CENTER
+      )
+      val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+      bitmap.eraseColor(Color.WHITE)
+      pdfPage.render(bitmap, null, transform, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+
+      withContext(Dispatchers.Main) {
+        mBitmap.recycle()
+        mBitmap = bitmap
+        invalidate()
+      }
+
+      pdfPage.close()
+      renderer.close()
+      fd.close()
     }
-
-    val renderer = PdfRenderer(fd)
-    val pdfPage = renderer.openPage(mPage)
-
-    val transform = Matrix()
-    transform.setRectToRect(
-      RectF(0f, 0f, pdfPage.width.toFloat(), pdfPage.height.toFloat()),
-      RectF(0f, 0f, width.toFloat(), height.toFloat()),
-      Matrix.ScaleToFit.CENTER
-    )
-    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    bitmap.eraseColor(Color.WHITE)
-    pdfPage.render(bitmap, null, transform, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-    pdfPage.close()
-    renderer.close()
-    fd.close()
-
-    mBitmap.recycle()
-    mBitmap = bitmap
-
-    invalidate()
   }
 
   override fun onDraw(canvas: Canvas) {
