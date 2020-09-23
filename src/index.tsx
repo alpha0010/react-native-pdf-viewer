@@ -95,11 +95,14 @@ export function Pdf({ onError, onLoadComplete, source }: PdfProps) {
   return (
     <FlatList
       data={pageIndexes}
+      initialNumToRender={1}
       ItemSeparatorComponent={() => <View style={styles.separator} />}
       keyExtractor={(item) => item.toString()}
+      maxToRenderPerBatch={3}
       renderItem={({ item }) => (
         <PdfView page={item} source={source} style={styles.page} />
       )}
+      windowSize={7}
     />
   );
 }
