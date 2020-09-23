@@ -21,8 +21,13 @@ class PdfViewShadowNode: RCTShadowView {
             return
         }
         let pageBounds = pdfPage.getBoxRect(.cropBox)
-        pageHeight = Float(pageBounds.height)
-        pageWidth = Float(pageBounds.width)
+        if pdfPage.rotationAngle % 180 == 90 {
+            pageHeight = Float(pageBounds.width)
+            pageWidth = Float(pageBounds.height)
+        } else {
+            pageHeight = Float(pageBounds.height)
+            pageWidth = Float(pageBounds.width)
+        }
 
         YGNodeMarkDirty(self.yogaNode)
     }
