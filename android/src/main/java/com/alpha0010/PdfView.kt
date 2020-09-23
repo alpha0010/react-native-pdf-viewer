@@ -50,7 +50,12 @@ class PdfView(context: Context) : View(context) {
         return@launch
       }
 
-      val renderer = PdfRenderer(fd)
+      val renderer = try {
+        PdfRenderer(fd)
+      } catch (e: Exception) {
+        fd.close()
+        return@launch
+      }
       val pdfPage = try {
         renderer.openPage(mPage)
       } catch (e: Exception) {

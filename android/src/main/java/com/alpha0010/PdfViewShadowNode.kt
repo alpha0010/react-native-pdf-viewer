@@ -47,7 +47,12 @@ class PdfViewShadowNode : LayoutShadowNode(), YogaMeasureFunction {
     } catch (e: FileNotFoundException) {
       return
     }
-    val renderer = PdfRenderer(fd)
+    val renderer = try {
+      PdfRenderer(fd)
+    } catch (e: Exception) {
+      fd.close()
+      return
+    }
     val page = try {
       renderer.openPage(mPage)
     } catch (e: Exception) {

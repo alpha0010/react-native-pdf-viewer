@@ -27,11 +27,18 @@ type PdfProps = {
   source: string;
 };
 
+type PageDim = { height: number; width: number };
+
 type PdfUtilType = {
   /**
    * Get the number of pages of a pdf.
    */
   getPageCount(source: string): Promise<number>;
+
+  /**
+   * Get the dimensions of every page.
+   */
+  getPageSizes(source: string): Promise<PageDim[]>;
 
   /**
    * Extract a bundled asset and return its absolute path.
@@ -61,23 +68,25 @@ export const PdfUtil: PdfUtilType = NativeModules.RNPdfUtil;
  */
 export const PdfView = requireNativeComponent<PdfViewProps>('RNPdfView');
 
+const separatorSize = 4;
+
 /**
  * Display a pdf.
  */
 export function Pdf({ onError, onLoadComplete, source }: PdfProps) {
-  const [pageIndexes, setPageIndexes] = useState<number[]>([]);
+  const [flatListLayout, setFlatListLayout] = useState<PageDim>({
+    height: 0,
+    width: 0,
+  });
+  const [pageDims, setPageDims] = useState<PageDim[]>([]);
   useEffect(() => {
     const state = { live: true };
-    PdfUtil.getPageCount(source)
-      .then((numPages) => {
+    PdfUtil.getPageSizes(source)
+      .then((sizes) => {
         if (state.live) {
-          const newIndexes: number[] = [];
-          for (let i = 0; i < numPages; ++i) {
-            newIndexes.push(i);
-          }
-          setPageIndexes(newIndexes);
+          setPageDims(sizes);
           if (onLoadComplete != null) {
-            onLoadComplete(numPages);
+            onLoadComplete(sizes.length);
           }
         }
       })
@@ -90,19 +99,52 @@ export function Pdf({ onError, onLoadComplete, source }: PdfProps) {
     return () => {
       state.live = false;
     };
-  }, [onError, onLoadComplete, setPageIndexes, source]);
+  }, [onError, onLoadComplete, setPageDims, source]);
 
   return (
     <FlatList
-      data={pageIndexes}
+      data={pageDims}
+      getItemLayout={(data, index) => {
+        let itemHeight = 100;
+        let offset = (itemHeight + separatorSize) * index;
+        if (data == null) {
+          console.warn('Pdf list getItemLayout() not passed data.');
+        } else if (flatListLayout.height === 0 || flatListLayout.width === 0) {
+          console.warn(
+            'Pdf list getItemLayout() could not determine screen size.'
+          );
+        } else {
+          let pageSize = data[index];
+          itemHeight =
+            (flatListLayout.width * pageSize.height) / pageSize.width;
+          offset = 0;
+          for (let i = 0; i < index; ++i) {
+            pageSize = data[i];
+            offset +=
+              separatorSize +
+              (flatListLayout.width * pageSize.height) / pageSize.width;
+          }
+        }
+        return {
+          length: itemHeight,
+          offset,
+          index,
+        };
+      }}
       initialNumToRender={1}
       ItemSeparatorComponent={() => <View style={styles.separator} />}
-      keyExtractor={(item) => item.toString()}
-      maxToRenderPerBatch={3}
-      renderItem={({ item }) => (
-        <PdfView page={item} source={source} style={styles.page} />
+      keyExtractor={(_item, index) => index.toString()}
+      maxToRenderPerBatch={2}
+      onLayout={(event) => {
+        setFlatListLayout({
+          height: event.nativeEvent.layout.height,
+          width: event.nativeEvent.layout.width,
+        });
+      }}
+      renderItem={({ index }) => (
+        <PdfView page={index} source={source} style={styles.page} />
       )}
-      windowSize={7}
+      windowSize={5}
     />
   );
 }
@@ -116,5 +158,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.23,
     shadowRadius: 2.62,
   },
-  separator: { margin: 4 },
+  separator: { margin: separatorSize },
 });

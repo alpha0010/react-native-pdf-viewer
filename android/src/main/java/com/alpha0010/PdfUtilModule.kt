@@ -4,10 +4,7 @@ import android.graphics.pdf.PdfRenderer
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import androidx.annotation.RequiresApi
-import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
-import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.*
 import java.io.*
 
 class PdfUtilModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
@@ -41,8 +38,6 @@ class PdfUtilModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
     promise.resolve(file.absolutePath)
   }
 
-  // Example method
-  // See https://facebook.github.io/react-native/docs/native-modules-android
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactMethod
   fun getPageCount(source: String, promise: Promise) {
@@ -55,11 +50,59 @@ class PdfUtilModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       return
     }
 
-    val renderer = PdfRenderer(fd)
+    val renderer = try {
+      PdfRenderer(fd)
+    } catch (e: Exception) {
+      fd.close()
+      promise.reject(e)
+      return
+    }
     val pageCount = renderer.pageCount
     renderer.close()
     fd.close()
 
     promise.resolve(pageCount)
+  }
+
+  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+  @ReactMethod
+  fun getPageSizes(source: String, promise: Promise) {
+    val file = File(source)
+    val fd = try {
+      ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+    } catch (e: FileNotFoundException) {
+      promise.reject("ENOENT", e)
+      return
+    }
+
+    val renderer = try {
+      PdfRenderer(fd)
+    } catch (e: Exception) {
+      fd.close()
+      promise.reject(e)
+      return
+    }
+    val pages = Arguments.createArray()
+    for (pageNum in 0 until renderer.pageCount) {
+      val pdfPage = try {
+        renderer.openPage(pageNum)
+      } catch (e: Exception) {
+        renderer.close()
+        fd.close()
+        promise.reject(e)
+        return
+      }
+
+      val pageDim = Arguments.createMap()
+      pageDim.putInt("height", pdfPage.height)
+      pageDim.putInt("width", pdfPage.width)
+      pages.pushMap(pageDim)
+
+      pdfPage.close()
+    }
+    renderer.close()
+    fd.close()
+
+    promise.resolve(pages)
   }
 }
