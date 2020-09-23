@@ -1,5 +1,9 @@
 @objc(PdfUtilModule)
 class PdfUtilModule: NSObject {
+    @objc
+    static func requiresMainQueueSetup() -> Bool {
+        return false
+    }
 
     @objc(unpackAsset:withResolver:withRejecter:)
     func unpackAsset(source: String, resolve:RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {

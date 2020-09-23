@@ -34,11 +34,25 @@ class PdfView: UIView {
         UIColor.white.setFill()
         context.fill(frame)
 
+        let pageBounds = pdfPage.getBoxRect(.cropBox)
+        let pageHeight: CGFloat;
+        let pageWidth: CGFloat;
+        if pdfPage.rotationAngle % 180 == 90 {
+            pageHeight = pageBounds.width
+            pageWidth = pageBounds.height
+        } else {
+            pageHeight = pageBounds.height
+            pageWidth = pageBounds.width
+        }
         // Change context coordinate system to pdf coordinates
         context.translateBy(x: 0.0, y: frame.height)
-        context.scaleBy(x: 1.0, y: -1.0)
-        let pageBounds = pdfPage.getBoxRect(.cropBox)
-        context.scaleBy(x: frame.width / pageBounds.width, y: frame.height / pageBounds.height)
+        context.scaleBy(x: frame.width / pageWidth, y: -frame.height / pageHeight)
+        context.concatenate(pdfPage.getDrawingTransform(
+            .cropBox,
+            rect: CGRect(x: 0.0, y: 0.0, width: pageWidth, height: pageHeight),
+            rotate: 0,
+            preserveAspectRatio: false
+        ))
 
         context.interpolationQuality = .high
         context.setRenderingIntent(.defaultIntent)
