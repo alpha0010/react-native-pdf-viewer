@@ -1,3 +1,18 @@
+# [0.4.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v0.3.0...v0.4.0) (2020-09-23)
+
+
+### Bug Fixes
+
+* **ios:** actually correctly display rotated pages ([7a1ca6d](https://github.com/alpha0010/react-native-pdf-viewer/commit/7a1ca6de5661ee4f678c84aa6bef60f1086bb78d))
+* **ios:** correct display orientation of rotated pages ([223944f](https://github.com/alpha0010/react-native-pdf-viewer/commit/223944fff7a8583985175b21e29fbab02ef0c1f2))
+
+
+### Features
+
+* **android:** render pages in background ([c53f875](https://github.com/alpha0010/react-native-pdf-viewer/commit/c53f875ddbed5bcb1cf92356e5dfc6d3f4591609))
+* **ios:** render pages in background ([fcfeb08](https://github.com/alpha0010/react-native-pdf-viewer/commit/fcfeb0862687eb52fce2f35242022843ce974c7f))
+* reduce render memory requirements ([82bac5a](https://github.com/alpha0010/react-native-pdf-viewer/commit/82bac5a9c7ef3e3567cc71a2a8e88d0fcfafd89e))
+
 # [0.3.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v0.2.0...v0.3.0) (2020-09-21)
 
 

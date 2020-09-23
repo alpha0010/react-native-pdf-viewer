@@ -1,6 +1,6 @@
 {
   "name": "react-native-pdf-light",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "PDF viewer for React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -21,6 +21,7 @@
     "!android/build",
     "!android/gradle",
     "!lib/typescript/example",
+    "!**/.DS_Store",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__"
@@ -37,6 +38,7 @@
   },
   "keywords": [
     "react-native",
+    "pdf",
     "ios",
     "android"
   ],
