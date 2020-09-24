@@ -1,12 +1,16 @@
 package com.alpha0010
 
 import android.os.Build
+import android.util.LruCache
+import android.util.Size
 import androidx.annotation.RequiresApi
 import com.facebook.react.uimanager.BaseViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
 
 class PdfViewManager : BaseViewManager<PdfView, PdfViewShadowNode>() {
+  private val mMeasureCache = LruCache<String, Size>(128)
+
   override fun getName(): String {
     return "RNPdfView"
   }
@@ -16,7 +20,7 @@ class PdfViewManager : BaseViewManager<PdfView, PdfViewShadowNode>() {
   }
 
   override fun createShadowNodeInstance(): PdfViewShadowNode {
-    return PdfViewShadowNode()
+    return PdfViewShadowNode(mMeasureCache)
   }
 
   override fun getShadowNodeClass(): Class<out PdfViewShadowNode> {

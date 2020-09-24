@@ -3,6 +3,8 @@ package com.alpha0010
 import android.graphics.pdf.PdfRenderer
 import android.os.Build
 import android.os.ParcelFileDescriptor
+import android.util.LruCache
+import android.util.Size
 import androidx.annotation.RequiresApi
 import com.facebook.react.uimanager.LayoutShadowNode
 import com.facebook.react.uimanager.annotations.ReactProp
@@ -13,10 +15,11 @@ import com.facebook.yoga.YogaNode
 import java.io.File
 import java.io.FileNotFoundException
 
-class PdfViewShadowNode : LayoutShadowNode(), YogaMeasureFunction {
+class PdfViewShadowNode(measureCache: LruCache<String, Size>) : LayoutShadowNode(), YogaMeasureFunction {
+  private val mMeasureCache = measureCache
   private var mPage = 0
-  private var mPageHeight = 1f
-  private var mPageWidth = 1f
+  private var mPageHeight = 1
+  private var mPageWidth = 1
   private var mSource = ""
 
   init {
@@ -24,7 +27,7 @@ class PdfViewShadowNode : LayoutShadowNode(), YogaMeasureFunction {
   }
 
   override fun measure(node: YogaNode, width: Float, widthMode: YogaMeasureMode, height: Float, heightMode: YogaMeasureMode): Long {
-    val aspectRatio = mPageWidth / mPageHeight
+    val aspectRatio = mPageWidth.toFloat() / mPageHeight.toFloat()
     val targetWidth = height * aspectRatio
     if (widthMode == YogaMeasureMode.UNDEFINED || width < 1) {
       if (heightMode == YogaMeasureMode.UNDEFINED || height < 1) {
@@ -41,6 +44,17 @@ class PdfViewShadowNode : LayoutShadowNode(), YogaMeasureFunction {
 
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   private fun measurePdf() {
+    val cacheKey = "$mPage-$mSource"
+    val cachedSize = mMeasureCache[cacheKey]
+    if (cachedSize != null) {
+      if (mPageHeight != cachedSize.height || mPageWidth != cachedSize.width) {
+        mPageHeight = cachedSize.height
+        mPageWidth = cachedSize.width
+        dirty()
+      }
+      return
+    }
+
     val file = File(mSource)
     val fd = try {
       ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
@@ -60,8 +74,9 @@ class PdfViewShadowNode : LayoutShadowNode(), YogaMeasureFunction {
       fd.close()
       return
     }
-    mPageHeight = page.height.toFloat()
-    mPageWidth = page.width.toFloat()
+    mPageHeight = page.height
+    mPageWidth = page.width
+    mMeasureCache.put(cacheKey, Size(page.width, page.height))
     page.close()
     renderer.close()
     fd.close()
