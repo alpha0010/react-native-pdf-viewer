@@ -1,3 +1,11 @@
+# [1.0.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v0.4.0...v1.0.0) (2020-09-24)
+
+
+### Features
+
+* **android:** cache page measurements for layout ([f24e491](https://github.com/alpha0010/react-native-pdf-viewer/commit/f24e491ff6d9848b8b096162bef2a7ea2d8c3cbb))
+* measure all pages AOT, assists smooth scrolling ([2d7d1a8](https://github.com/alpha0010/react-native-pdf-viewer/commit/2d7d1a8545dba65a210ff3ff416135ba7d0c2f30))
+
 # [0.4.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v0.3.0...v0.4.0) (2020-09-23)
 
 
