@@ -42,6 +42,10 @@ Props:
 - `source: string`
   - Document to display.
 
+Methods:
+- `scrollTo(page: number): void`
+  - Scroll to the specified page (0-indexed).
+
 #### `<PdfView ... />` Single page of a pdf.
 
 Props:

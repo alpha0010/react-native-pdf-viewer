@@ -1,4 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 
 import { PageDim, PdfUtil } from './PdfUtil';
@@ -23,17 +29,38 @@ type PdfProps = {
   source: string;
 };
 
+export type PdfRef = {
+  /**
+   * Scroll to the specified page (0-indexed).
+   */
+  scrollTo(page: number): void;
+};
+
 const separatorSize = 4;
 
 /**
  * Display a pdf.
  */
-export function Pdf({ onError, onLoadComplete, source }: PdfProps) {
+export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
+  const { onError, onLoadComplete, source } = props;
+
   const [flatListLayout, setFlatListLayout] = useState<PageDim>({
     height: 0,
     width: 0,
   });
   const [pageDims, setPageDims] = useState<PageDim[]>([]);
+
+  const listRef = useRef<FlatList<PageDim>>(null);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      scrollTo: (page) =>
+        listRef.current?.scrollToIndex({ animated: true, index: page }),
+    }),
+    [listRef]
+  );
+
   useEffect(() => {
     const state = { live: true };
     PdfUtil.getPageSizes(source)
@@ -96,13 +123,14 @@ export function Pdf({ onError, onLoadComplete, source }: PdfProps) {
           width: event.nativeEvent.layout.width,
         });
       }}
+      ref={listRef}
       renderItem={({ index }) => (
         <PdfView page={index} source={source} style={styles.page} />
       )}
       windowSize={5}
     />
   );
-}
+});
 
 const styles = StyleSheet.create({
   page: {
