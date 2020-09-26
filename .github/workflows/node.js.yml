@@ -13,8 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Run tests
-      uses: actions/setup-node@v1
+    - uses: actions/cache@v2
+      with:
+        path: node_modules
+        key: ${{ hashFiles('package.json') }}
+    - uses: actions/setup-node@v1
       with:
         node-version: 12.x
     - run: yarn install
