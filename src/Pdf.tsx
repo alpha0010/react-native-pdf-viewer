@@ -1,12 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import {
-  FlatList,
-  NativeModules,
-  requireNativeComponent,
-  View,
-  ViewStyle,
-  StyleSheet,
-} from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
+
+import { PageDim, PdfUtil } from './PdfUtil';
+import { PdfView } from './PdfView';
 
 type PdfProps = {
   /**
@@ -26,47 +22,6 @@ type PdfProps = {
    */
   source: string;
 };
-
-type PageDim = { height: number; width: number };
-
-type PdfUtilType = {
-  /**
-   * Get the number of pages of a pdf.
-   */
-  getPageCount(source: string): Promise<number>;
-
-  /**
-   * Get the dimensions of every page.
-   */
-  getPageSizes(source: string): Promise<PageDim[]>;
-
-  /**
-   * Extract a bundled asset and return its absolute path.
-   */
-  unpackAsset(source: string): Promise<string>;
-};
-
-type PdfViewProps = {
-  /**
-   * Page (0-indexed) of document to display.
-   */
-  page: number;
-  /**
-   * Document to display.
-   */
-  source: string;
-  style?: ViewStyle;
-};
-
-/**
- * Utility pdf actions.
- */
-export const PdfUtil: PdfUtilType = NativeModules.RNPdfUtil;
-
-/**
- * Single page of a pdf.
- */
-export const PdfView = requireNativeComponent<PdfViewProps>('RNPdfView');
 
 const separatorSize = 4;
 
