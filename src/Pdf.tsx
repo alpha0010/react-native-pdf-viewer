@@ -85,7 +85,7 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
 
   return (
     <FlatList
-      data={pageDims}
+      data={flatListLayout.height === 0 ? [] : pageDims}
       getItemLayout={(data, index) => {
         let itemHeight = 100;
         let offset = (itemHeight + separatorSize) * index;
