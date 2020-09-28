@@ -36,7 +36,7 @@ export type PdfRef = {
   scrollTo(page: number): void;
 };
 
-const separatorSize = 4;
+const separatorSize = 8;
 
 /**
  * Display a pdf.
@@ -141,5 +141,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.23,
     shadowRadius: 2.62,
   },
-  separator: { margin: separatorSize },
+  separator: { height: separatorSize },
 });
