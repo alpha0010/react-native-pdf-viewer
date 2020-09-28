@@ -1,3 +1,16 @@
+# [1.1.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.0.0...v1.1.0) (2020-09-28)
+
+
+### Bug Fixes
+
+* doubled separator measure for flatlist layout computation ([f6694ab](https://github.com/alpha0010/react-native-pdf-viewer/commit/f6694abde3cefbc332e16512a59ac5a6aa56013e))
+* wait for view measure before rendering pages ([a64b53f](https://github.com/alpha0010/react-native-pdf-viewer/commit/a64b53f55854a8a2c98dda215aec32e68f5b65b3))
+
+
+### Features
+
+* support imperative scroll access ([889943d](https://github.com/alpha0010/react-native-pdf-viewer/commit/889943dabd798665a2bf5b2d535bbc253bd19af9))
+
 # [1.0.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v0.4.0...v1.0.0) (2020-09-24)
 
 
