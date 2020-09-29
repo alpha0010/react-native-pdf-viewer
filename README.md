@@ -56,8 +56,10 @@ The following props are forwarded to the underlying
 - `scrollEventThrottle`
 
 Methods:
-- `scrollTo(page: number): void`
+- `scrollToIndex(index: number): void`
   - Scroll to the specified page (0-indexed).
+- `scrollToOffset(offset: number): void`
+  - Scroll to the specified offset.
 
 #### `<PdfView ... />` Single page of a pdf.
 

@@ -117,7 +117,12 @@ export type PdfRef = {
   /**
    * Scroll to the specified page (0-indexed).
    */
-  scrollTo(page: number): void;
+  scrollToIndex(index: number): void;
+
+  /**
+   * Scroll to the specified offset.
+   */
+  scrollToOffset(offset: number): void;
 };
 
 const separatorSize = 8;
@@ -162,8 +167,10 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
   useImperativeHandle(
     ref,
     () => ({
-      scrollTo: (page) =>
-        listRef.current?.scrollToIndex({ animated: true, index: page }),
+      scrollToIndex: (index) =>
+        listRef.current?.scrollToIndex({ animated: true, index }),
+      scrollToOffset: (offset) =>
+        listRef.current?.scrollToOffset({ animated: true, offset }),
     }),
     [listRef]
   );
