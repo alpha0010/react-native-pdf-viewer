@@ -16,6 +16,18 @@ import {
 import { PageDim, PdfUtil } from './PdfUtil';
 import { PdfView } from './PdfView';
 
+export type PageMeasurement = {
+  /**
+   * Display height of the page.
+   */
+  itemHeight: number;
+
+  /**
+   * Position (dp) within the FlatList.
+   */
+  offset: number;
+};
+
 /**
  * Optional props, forwarded to the underlying `FlatList` component.
  */
@@ -91,6 +103,11 @@ type PdfProps = BaseListProps & {
   onLoadComplete?: (numberOfPages: number) => void;
 
   /**
+   * Callback to receive layout details of all pages.
+   */
+  onMeasurePages?: (measurements: PageMeasurement[]) => void;
+
+  /**
    * Document to display.
    */
   source: string;
@@ -104,6 +121,29 @@ export type PdfRef = {
 };
 
 const separatorSize = 8;
+
+/**
+ * Report measurements of all pages to a callback.
+ */
+function useMeasurePages(
+  layoutWidth: number,
+  pageDims: PageDim[],
+  onMeasurePages?: (measurements: PageMeasurement[]) => void
+) {
+  useEffect(() => {
+    if (onMeasurePages == null || layoutWidth === 0) {
+      return;
+    }
+    const measurements: PageMeasurement[] = [];
+    let offset = 0;
+    for (const pageSize of pageDims) {
+      const itemHeight = (layoutWidth * pageSize.height) / pageSize.width;
+      measurements.push({ itemHeight, offset });
+      offset += itemHeight + separatorSize;
+    }
+    onMeasurePages(measurements);
+  }, [layoutWidth, onMeasurePages, pageDims]);
+}
 
 /**
  * Display a pdf.
@@ -149,6 +189,8 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
       state.live = false;
     };
   }, [onError, onLoadComplete, setPageDims, source]);
+
+  useMeasurePages(flatListLayout.width, pageDims, props.onMeasurePages);
 
   return (
     <FlatList

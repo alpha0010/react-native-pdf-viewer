@@ -39,6 +39,8 @@ Props:
 - `onLoadComplete: (numberOfPages: number) => void`
   - Optional: Callback to handle pdf load completion.
   - Passed the page count of the loaded pdf.
+- `onMeasurePages: (measurements: { itemHeight: number, offset: number }[]) => void`
+  - Optional: Callback to receive layout details of all pages.
 - `source: string`
   - Document to display.
 
