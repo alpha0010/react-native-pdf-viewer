@@ -42,6 +42,17 @@ Props:
 - `source: string`
   - Document to display.
 
+The following props are forwarded to the underlying
+[`FlatList`](https://reactnative.dev/docs/flatlist) component:
+- `initialScrollIndex`
+- `ListEmptyComponent`
+- `onMomentumScrollBegin`
+- `onMomentumScrollEnd`
+- `onScroll`
+- `onScrollBeginDrag`
+- `onScrollEndDrag`
+- `scrollEventThrottle`
+
 Methods:
 - `scrollTo(page: number): void`
   - Scroll to the specified page (0-indexed).

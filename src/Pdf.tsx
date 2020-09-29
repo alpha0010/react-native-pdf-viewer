@@ -5,12 +5,79 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { FlatList, StyleSheet, View } from 'react-native';
+import {
+  FlatList,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import { PageDim, PdfUtil } from './PdfUtil';
 import { PdfView } from './PdfView';
 
-type PdfProps = {
+/**
+ * Optional props, forwarded to the underlying `FlatList` component.
+ */
+type BaseListProps = {
+  /**
+   * Instead of starting at the top with the first item, start at
+   * initialScrollIndex.
+   */
+  initialScrollIndex?: number;
+
+  /**
+   * Rendered when the list is empty. Can be a React Component Class, a render
+   * function, or a rendered element.
+   */
+  ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
+
+  /**
+   * Called when the momentum scroll starts (scroll which occurs as the scroll
+   * view starts gliding).
+   */
+  onMomentumScrollBegin?: (
+    event: NativeSyntheticEvent<NativeScrollEvent>
+  ) => void;
+
+  /**
+   * Called when the momentum scroll ends (scroll which occurs as the scroll
+   * view glides to a stop).
+   */
+  onMomentumScrollEnd?: (
+    event: NativeSyntheticEvent<NativeScrollEvent>
+  ) => void;
+
+  /**
+   * Fires at most once per frame during scrolling. The frequency of the events
+   * can be contolled using the scrollEventThrottle prop.
+   */
+  onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
+  /**
+   * Called when the user begins to drag the scroll view.
+   */
+  onScrollBeginDrag?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
+  /**
+   * Called when the user stops dragging the scroll view and it either stops or
+   * begins to glide.
+   */
+  onScrollEndDrag?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
+  /**
+   * This controls how often the scroll event will be fired while scrolling
+   * (in events per seconds). A higher number yields better accuracy for code
+   * that is tracking the scroll position, but can lead to scroll performance
+   * problems due to the volume of information being send over the bridge. The
+   * default value is zero, which means the scroll event will be sent only once
+   * each time the view is scrolled.
+   * Only available on iOS.
+   */
+  scrollEventThrottle?: number;
+};
+
+type PdfProps = BaseListProps & {
   /**
    * Callback to handle errors.
    */
@@ -128,6 +195,14 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
         <PdfView page={index} source={source} style={styles.page} />
       )}
       windowSize={5}
+      initialScrollIndex={props.initialScrollIndex}
+      ListEmptyComponent={props.ListEmptyComponent}
+      onMomentumScrollBegin={props.onMomentumScrollBegin}
+      onMomentumScrollEnd={props.onMomentumScrollEnd}
+      onScroll={props.onScroll}
+      onScrollBeginDrag={props.onScrollBeginDrag}
+      onScrollEndDrag={props.onScrollEndDrag}
+      scrollEventThrottle={props.scrollEventThrottle}
     />
   );
 });
