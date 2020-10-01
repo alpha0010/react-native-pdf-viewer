@@ -31,6 +31,13 @@ PdfUtil.getPageCount(source).then(console.log);
 <Pdf source={source} />
 ```
 
+If creating your own custom viewer, import can be optimized to:
+```js
+import { PdfView } from 'react-native-pdf-light/PdfView';
+
+<PdfView page={page} source={source} />
+```
+
 #### `<Pdf ... />` Display a pdf.
 
 Props:

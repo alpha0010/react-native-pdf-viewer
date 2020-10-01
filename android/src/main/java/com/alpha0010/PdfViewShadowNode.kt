@@ -31,19 +31,25 @@ class PdfViewShadowNode(measureCache: LruCache<String, Size>) : LayoutShadowNode
     val targetWidth = height * aspectRatio
     if (widthMode == YogaMeasureMode.UNDEFINED || width < 1) {
       if (heightMode == YogaMeasureMode.UNDEFINED || height < 1) {
+        // No restrictions on dimensions? Use pdf dimensions.
         return YogaMeasureOutput.make(mPageWidth, mPageHeight)
       }
+      // No width requirements? Scale page to match yoga requested height.
       return YogaMeasureOutput.make(targetWidth, height)
     }
 
     if (targetWidth <= width) {
+      // When scaled to match yoga requested height, page scaled width is
+      // within yoga width bounds. Scale page to match yoga requested height.
       return YogaMeasureOutput.make(targetWidth, height)
     }
+    // Scale page to match yoga requested width.
     return YogaMeasureOutput.make(width, width / aspectRatio)
   }
 
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   private fun measurePdf() {
+    // Attempt to get page dimensions from cache, to avoid disk I/O.
     val cacheKey = "$mPage-$mSource"
     val cachedSize = mMeasureCache[cacheKey]
     if (cachedSize != null) {
@@ -55,6 +61,8 @@ class PdfViewShadowNode(measureCache: LruCache<String, Size>) : LayoutShadowNode
       return
     }
 
+    // It appears that this cannot be pushed to a background thread due to
+    // the call to `dirty()`.
     val file = File(mSource)
     val fd = try {
       ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
@@ -84,6 +92,9 @@ class PdfViewShadowNode(measureCache: LruCache<String, Size>) : LayoutShadowNode
     dirty()
   }
 
+  /**
+   * Page (0-indexed) of document to display.
+   */
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactProp(name = "page", defaultInt = 0)
   fun setPage(page: Int) {
@@ -93,6 +104,9 @@ class PdfViewShadowNode(measureCache: LruCache<String, Size>) : LayoutShadowNode
     }
   }
 
+  /**
+   * Document to display.
+   */
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactProp(name = "source")
   fun setSource(source: String?) {

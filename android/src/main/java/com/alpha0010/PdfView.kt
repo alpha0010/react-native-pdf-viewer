@@ -39,6 +39,7 @@ class PdfView(context: Context) : View(context) {
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   private fun renderPdf() {
     if (height < 1 || width < 1 || mSource.isEmpty()) {
+      // View layout not yet complete, or nothing to render.
       return
     }
 
@@ -64,17 +65,21 @@ class PdfView(context: Context) : View(context) {
         return@launch
       }
 
+      // Scale the pdf page up/down to match the requested render dimensions.
       val transform = Matrix()
       transform.setRectToRect(
         RectF(0f, 0f, pdfPage.width.toFloat(), pdfPage.height.toFloat()),
         RectF(0f, 0f, width.toFloat(), height.toFloat()),
         Matrix.ScaleToFit.CENTER
       )
+      // Api requires bitmap have alpha channel; fill with white so rendered
+      // bitmap is opaque.
       val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
       bitmap.eraseColor(Color.WHITE)
       pdfPage.render(bitmap, null, transform, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
 
       withContext(Dispatchers.Main) {
+        // Post new bitmap for display.
         mBitmap.recycle()
         mBitmap = bitmap
         invalidate()

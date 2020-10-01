@@ -14,6 +14,7 @@ class PdfView: UIView {
 
     private func renderPdf() {
         guard !frame.isEmpty && !source.isEmpty else {
+            // View layout not yet complete, or nothing to render.
             return
         }
 
@@ -34,6 +35,7 @@ class PdfView: UIView {
             }
             context.saveGState()
 
+            // Default color for opaque context is black, so fill with white.
             UIColor.white.setFill()
             context.fill(currentFrame)
 
@@ -47,7 +49,7 @@ class PdfView: UIView {
                 pageHeight = pageBounds.height
                 pageWidth = pageBounds.width
             }
-            // Change context coordinate system to pdf coordinates
+            // Change context coordinate system to pdf coordinates.
             context.translateBy(x: 0.0, y: currentFrame.height)
             context.scaleBy(x: currentFrame.width / pageWidth, y: -currentFrame.height / pageHeight)
             context.concatenate(pdfPage.getDrawingTransform(
@@ -66,6 +68,7 @@ class PdfView: UIView {
             UIGraphicsEndImageContext()
 
             DispatchQueue.main.async {
+                // Post new bitmap for display.
                 self.layer.contents = rendered?.cgImage
             }
         }

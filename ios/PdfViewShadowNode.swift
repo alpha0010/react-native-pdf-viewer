@@ -20,6 +20,7 @@ class PdfViewShadowNode: RCTShadowView {
         guard let pdfPage = pdf.page(at: page.intValue + 1) else {
             return
         }
+        // Apply crop and rotation to dimensions.
         let pageBounds = pdfPage.getBoxRect(.cropBox)
         if pdfPage.rotationAngle % 180 == 90 {
             pageHeight = Float(pageBounds.width)
@@ -41,13 +42,18 @@ func measure(node: YGNodeRef?, width: Float, widthMode: YGMeasureMode, height: F
     let targetWidth = height * aspectRatio
     if widthMode == .undefined || width < 1 {
         if heightMode == .undefined || height < 1 {
+            // No restrictions on dimensions? Use pdf dimensions.
             return YGSize(width: shadowNode.pageWidth, height: shadowNode.pageHeight)
         }
+        // No width requirements? Scale page to match yoga requested height.
         return YGSize(width: targetWidth, height: height)
     }
 
     if targetWidth <= width {
+        // When scaled to match yoga requested height, page scaled width is
+        // within yoga width bounds. Scale page to match yoga requested height.
         return YGSize(width: targetWidth, height: height)
     }
+    // Scale page to match yoga requested width.
     return YGSize(width: width, height: width / aspectRatio)
 }

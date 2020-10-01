@@ -142,8 +142,10 @@ function useMeasurePages(
     const measurements: PageMeasurement[] = [];
     let offset = 0;
     for (const pageSize of pageDims) {
+      // Measurements include scaling to fill width,
       const itemHeight = (layoutWidth * pageSize.height) / pageSize.width;
       measurements.push({ itemHeight, offset });
+      // and offset for separator between pages.
       offset += itemHeight + separatorSize;
     }
     onMeasurePages(measurements);
@@ -203,6 +205,8 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
     <FlatList
       data={flatListLayout.height === 0 ? [] : pageDims}
       getItemLayout={(data, index) => {
+        // Default height, so layout computation will always return non-zero.
+        // This case should never occur.
         let itemHeight = 100;
         let offset = (itemHeight + separatorSize) * index;
         if (data == null) {
@@ -215,6 +219,7 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
           let pageSize = data[index];
           itemHeight =
             (flatListLayout.width * pageSize.height) / pageSize.width;
+          // Add up the separators and heights of pages before the current page.
           offset = 0;
           for (let i = 0; i < index; ++i) {
             pageSize = data[i];
@@ -234,6 +239,7 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
       keyExtractor={(_item, index) => index.toString()}
       maxToRenderPerBatch={2}
       onLayout={(event) => {
+        // For sizing pages to fit width, including on device rotation.
         setFlatListLayout({
           height: event.nativeEvent.layout.height,
           width: event.nativeEvent.layout.width,

@@ -5,6 +5,9 @@ class PdfUtilModule: NSObject {
         return false
     }
 
+    /**
+     * Extract a bundled asset and return its absolute path.
+     */
     @objc(unpackAsset:withResolver:withRejecter:)
     func unpackAsset(source: String, resolve:RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {
         guard let cacheDirectory = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.cachesDirectory, FileManager.SearchPathDomainMask.userDomainMask, true).first else {
@@ -31,6 +34,9 @@ class PdfUtilModule: NSObject {
         resolve(destination)
     }
 
+    /**
+     * Get the number of pages of a pdf.
+     */
     @objc(getPageCount:withResolver:withRejecter:)
     func getPageCount(source: String, resolve:RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {
         let url = URL(fileURLWithPath: source)
@@ -41,6 +47,9 @@ class PdfUtilModule: NSObject {
         resolve(pdf.numberOfPages)
     }
 
+    /**
+     * Get the dimensions of every page.
+     */
     @objc(getPageSizes:withResolver:withRejecter:)
     func getPageSizes(source: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
         let url = URL(fileURLWithPath: source)
@@ -49,7 +58,9 @@ class PdfUtilModule: NSObject {
             return
         }
 
+        // Read dimensions (in pdf units) of all pages.
         var pages: [[String: CGFloat]] = []
+        // CGPDFDocument pages are 1-indexed.
         for pageNum in 1...pdf.numberOfPages {
             guard let pdfPage = pdf.page(at: pageNum) else {
                 reject(nil, "Unable to read pdf page \(pageNum)", nil)

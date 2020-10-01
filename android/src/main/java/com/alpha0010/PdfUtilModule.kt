@@ -12,6 +12,9 @@ class PdfUtilModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
     return "RNPdfUtil"
   }
 
+  /**
+   * Extract a bundled asset and return its absolute path.
+   */
   @ReactMethod
   fun unpackAsset(source: String, promise: Promise) {
     val file = File(reactApplicationContext.cacheDir, source)
@@ -38,6 +41,9 @@ class PdfUtilModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
     promise.resolve(file.absolutePath)
   }
 
+  /**
+   * Get the number of pages of a pdf.
+   */
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactMethod
   fun getPageCount(source: String, promise: Promise) {
@@ -64,6 +70,9 @@ class PdfUtilModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
     promise.resolve(pageCount)
   }
 
+  /**
+   * Get the dimensions of every page.
+   */
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactMethod
   fun getPageSizes(source: String, promise: Promise) {
@@ -82,6 +91,7 @@ class PdfUtilModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       promise.reject(e)
       return
     }
+    // Read dimensions (in pdf units) of all pages.
     val pages = Arguments.createArray()
     for (pageNum in 0 until renderer.pageCount) {
       val pdfPage = try {
