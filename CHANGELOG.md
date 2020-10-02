@@ -1,3 +1,13 @@
+# [1.2.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.1.0...v1.2.0) (2020-10-02)
+
+
+### Features
+
+* dispatch error/completion events from native renderer ([865e93c](https://github.com/alpha0010/react-native-pdf-viewer/commit/865e93cb9b892198f52ebd231ab8f04a6701255e))
+* expose rendered page measurement details ([46be2c2](https://github.com/alpha0010/react-native-pdf-viewer/commit/46be2c253b96c4485a808c5a15885ad492b4b621))
+* expose some props of the underlying FlatList ([3fe0fa1](https://github.com/alpha0010/react-native-pdf-viewer/commit/3fe0fa112d84b9364582c4257e6981344ba6d155))
+* support scroll to offset ([0fbe2bf](https://github.com/alpha0010/react-native-pdf-viewer/commit/0fbe2bf8e08f10b4976d4b6728805d082c4e1d0b))
+
 # [1.1.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.0.0...v1.1.0) (2020-09-28)
 
 
