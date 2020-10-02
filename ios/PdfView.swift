@@ -1,6 +1,8 @@
 class PdfView: UIView {
     @objc var page: NSNumber = 0 { didSet { renderPdf() } }
     @objc var source = "" { didSet { renderPdf() } }
+    @objc var onPdfError: RCTBubblingEventBlock?
+    @objc var onPdfLoadComplete: RCTBubblingEventBlock?
 
     private var previousBounds: CGRect = .zero
 
@@ -22,15 +24,18 @@ class PdfView: UIView {
         DispatchQueue.global().async {
             let url = URL(fileURLWithPath: self.source)
             guard let pdf = CGPDFDocument(url as CFURL) else {
+                self.dispatchOnError(message: "Failed to open '\(self.source)' for reading.")
                 return
             }
             guard let pdfPage = pdf.page(at: self.page.intValue + 1) else {
+                self.dispatchOnError(message: "Failed to open page '\(self.page)' of '\(self.source)' for reading.")
                 return
             }
 
             UIGraphicsBeginImageContextWithOptions(currentFrame.size, true, 0.0)
             guard let context = UIGraphicsGetCurrentContext() else {
                 UIGraphicsEndImageContext()
+                self.dispatchOnError(message: "Failed to open graphics context for rendering '\(self.source)'.")
                 return
             }
             context.saveGState()
@@ -71,6 +76,21 @@ class PdfView: UIView {
                 // Post new bitmap for display.
                 self.layer.contents = rendered?.cgImage
             }
+            self.dispatchOnLoadComplete(pageWidth: pageWidth, pageHeight: pageHeight)
         }
+    }
+
+    private func dispatchOnError(message: String) {
+        guard let dispatcher = onPdfError else {
+            return
+        }
+        dispatcher(["message": message])
+    }
+
+    private func dispatchOnLoadComplete(pageWidth: CGFloat, pageHeight: CGFloat) {
+        guard let dispatcher = onPdfLoadComplete else {
+            return
+        }
+        dispatcher(["width": pageWidth, "height": pageHeight])
     }
 }

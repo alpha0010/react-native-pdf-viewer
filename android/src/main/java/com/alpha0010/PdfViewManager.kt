@@ -27,6 +27,17 @@ class PdfViewManager : BaseViewManager<PdfView, PdfViewShadowNode>() {
     return PdfViewShadowNode::class.java
   }
 
+  override fun getExportedCustomBubblingEventTypeConstants(): MutableMap<String, Any> {
+    return mutableMapOf(
+      "onPdfError" to mapOf(
+        "phasedRegistrationNames" to mapOf("bubbled" to "onPdfError")
+      ),
+      "onPdfLoadComplete" to mapOf(
+        "phasedRegistrationNames" to mapOf("bubbled" to "onPdfLoadComplete")
+      )
+    )
+  }
+
   override fun updateExtraData(root: PdfView, extraData: Any?) {}
 
   /**

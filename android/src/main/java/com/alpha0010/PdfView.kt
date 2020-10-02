@@ -7,6 +7,9 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.view.View
 import androidx.annotation.RequiresApi
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.ReactContext
+import com.facebook.react.uimanager.events.RCTEventEmitter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -48,6 +51,7 @@ class PdfView(context: Context) : View(context) {
       val fd = try {
         ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
       } catch (e: FileNotFoundException) {
+        onError("File '$mSource' not found.")
         return@launch
       }
 
@@ -55,6 +59,7 @@ class PdfView(context: Context) : View(context) {
         PdfRenderer(fd)
       } catch (e: Exception) {
         fd.close()
+        onError("Failed to open '$mSource' for reading.")
         return@launch
       }
       val pdfPage = try {
@@ -62,6 +67,7 @@ class PdfView(context: Context) : View(context) {
       } catch (e: Exception) {
         renderer.close()
         fd.close()
+        onError("Failed to open page '$mPage' of '$mSource' for reading.")
         return@launch
       }
 
@@ -85,10 +91,31 @@ class PdfView(context: Context) : View(context) {
         invalidate()
       }
 
+      onLoadComplete(pdfPage.width, pdfPage.height)
+
       pdfPage.close()
       renderer.close()
       fd.close()
     }
+  }
+
+  private fun onError(message: String) {
+    val event = Arguments.createMap()
+    event.putString("message", message)
+    val reactContext = context as ReactContext
+    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+      id, "onPdfError", event
+    )
+  }
+
+  private fun onLoadComplete(pageWidth: Int, pageHeight: Int) {
+    val event = Arguments.createMap()
+    event.putInt("width", pageWidth)
+    event.putInt("height", pageHeight)
+    val reactContext = context as ReactContext
+    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+      id, "onPdfLoadComplete", event
+    )
   }
 
   override fun onDraw(canvas: Canvas) {

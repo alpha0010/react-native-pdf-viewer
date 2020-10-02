@@ -5,6 +5,9 @@
 RCT_EXPORT_VIEW_PROPERTY(page, NSNumber)
 RCT_EXPORT_VIEW_PROPERTY(source, NSString)
 
+RCT_EXPORT_VIEW_PROPERTY(onPdfError, RCTBubblingEventBlock)
+RCT_EXPORT_VIEW_PROPERTY(onPdfLoadComplete, RCTBubblingEventBlock)
+
 RCT_EXPORT_SHADOW_PROPERTY(page, NSNumber)
 RCT_EXPORT_SHADOW_PROPERTY(source, NSString)
 
