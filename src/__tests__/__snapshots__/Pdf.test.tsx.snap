@@ -23,10 +23,33 @@ exports[`renders pdf viewer 1`] = `
   renderItem={[Function]}
   scrollEventThrottle={50}
   stickyHeaderIndices={Array []}
+  testID="pdfFlatList"
   updateCellsBatchingPeriod={50}
   viewabilityConfigCallbackPairs={Array []}
   windowSize={5}
 >
   <View />
 </RCTScrollView>
+`;
+
+exports[`viewer renders pages 1`] = `
+<RNPdfView
+  onPdfError={[Function]}
+  onPdfLoadComplete={[Function]}
+  page={0}
+  source="test.pdf"
+  style={
+    Object {
+      "backgroundColor": "#fff",
+      "elevation": 4,
+      "shadowColor": "#000",
+      "shadowOffset": Object {
+        "height": 2,
+        "width": 0,
+      },
+      "shadowOpacity": 0.23,
+      "shadowRadius": 2.62,
+    }
+  }
+/>
 `;

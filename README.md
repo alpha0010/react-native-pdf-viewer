@@ -1,6 +1,7 @@
 # react-native-pdf-light
 
 [![npm version](https://badge.fury.io/js/react-native-pdf-light.svg)](https://www.npmjs.com/package/react-native-pdf-light)
+![CI](https://github.com/alpha0010/react-native-pdf-viewer/workflows/CI/badge.svg)
 
 PDF viewer for React Native. Implemented with platform native render functions
 for smallest deploy size impact, and restricted feature set to simplify

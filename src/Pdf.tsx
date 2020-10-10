@@ -258,6 +258,7 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
       onScrollBeginDrag={props.onScrollBeginDrag}
       onScrollEndDrag={props.onScrollEndDrag}
       scrollEventThrottle={props.scrollEventThrottle}
+      testID="pdfFlatList"
     />
   );
 });
