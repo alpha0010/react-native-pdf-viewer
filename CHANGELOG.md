@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.2.0...v1.3.0) (2020-10-12)
+
+
+### Features
+
+* support page resize mode ([0e96e3c](https://github.com/alpha0010/react-native-pdf-viewer/commit/0e96e3cb35d685c7cb9e310099d7c9c1dd4d6420))
+
 # [1.2.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.1.0...v1.2.0) (2020-10-02)
 
 
