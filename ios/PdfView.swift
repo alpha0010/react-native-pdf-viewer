@@ -1,10 +1,17 @@
+enum ResizeMode: String {
+    case CONTAIN = "contain"
+    case FIT_WIDTH = "fitWidth"
+}
+
 class PdfView: UIView {
     @objc var page: NSNumber = 0 { didSet { renderPdf() } }
+    @objc var resizeMode = ResizeMode.CONTAIN.rawValue { didSet { validateResizeMode() } }
     @objc var source = "" { didSet { renderPdf() } }
     @objc var onPdfError: RCTBubblingEventBlock?
     @objc var onPdfLoadComplete: RCTBubblingEventBlock?
 
     private var previousBounds: CGRect = .zero
+    private var realResizeMode = ResizeMode.CONTAIN
 
     override func layoutSubviews() {
         if bounds != previousBounds {
@@ -12,6 +19,16 @@ class PdfView: UIView {
             previousBounds = bounds
         }
         super.layoutSubviews()
+    }
+
+    private func validateResizeMode() {
+        guard let resizeEnum = ResizeMode(rawValue: resizeMode) else {
+            dispatchOnError(message: "Unknown resizeMode '\(resizeMode)'.")
+            return
+        }
+
+        realResizeMode = resizeEnum
+        renderPdf()
     }
 
     private func renderPdf() {
@@ -55,8 +72,20 @@ class PdfView: UIView {
                 pageWidth = pageBounds.width
             }
             // Change context coordinate system to pdf coordinates.
-            context.translateBy(x: 0.0, y: currentFrame.height)
-            context.scaleBy(x: currentFrame.width / pageWidth, y: -currentFrame.height / pageHeight)
+            let targetHeight = currentFrame.width * pageHeight / pageWidth
+            if self.realResizeMode == ResizeMode.CONTAIN {
+                // Shift/resize so render is contained and centered in the context.
+                if targetHeight > currentFrame.height {
+                    let targetWidth = currentFrame.height * pageWidth / pageHeight
+                    context.translateBy(x: (currentFrame.width - targetWidth) / 2, y: 0.0)
+                    let scaleFactor = currentFrame.height / targetHeight
+                    context.scaleBy(x: scaleFactor, y: scaleFactor)
+                } else {
+                    context.translateBy(x: 0.0, y: (currentFrame.height - targetHeight) / 2)
+                }
+            }
+            context.translateBy(x: 0.0, y: targetHeight)
+            context.scaleBy(x: currentFrame.width / pageWidth, y: -targetHeight / pageHeight)
             context.concatenate(pdfPage.getDrawingTransform(
                 .cropBox,
                 rect: CGRect(x: 0.0, y: 0.0, width: pageWidth, height: pageHeight),

@@ -3,6 +3,7 @@
 @interface RCT_EXTERN_REMAP_MODULE(RNPdfView, PdfViewManager, RCTViewManager)
 
 RCT_EXPORT_VIEW_PROPERTY(page, NSNumber)
+RCT_EXPORT_VIEW_PROPERTY(resizeMode, NSString)
 RCT_EXPORT_VIEW_PROPERTY(source, NSString)
 
 RCT_EXPORT_VIEW_PROPERTY(onPdfError, RCTBubblingEventBlock)

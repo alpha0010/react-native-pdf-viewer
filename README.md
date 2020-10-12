@@ -74,6 +74,8 @@ Methods:
 Props:
 - `page: number`
   - Page (0-indexed) of document to display.
+- `resizeMode: 'contain' | 'fitWidth'`
+  - Optional: How pdf page should be scaled to fit in view dimensions.
 - `source: string`
   - Document to display.
 - `style: ViewStyle`

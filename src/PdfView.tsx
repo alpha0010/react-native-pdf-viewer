@@ -9,10 +9,13 @@ export type ErrorEvent = { message: string };
 
 export type LoadCompleteEvent = { height: number; width: number };
 
+export type ResizeMode = 'contain' | 'fitWidth';
+
 type PdfViewNativeProps = {
   onPdfError: (event: NativeSyntheticEvent<ErrorEvent>) => void;
   onPdfLoadComplete: (event: NativeSyntheticEvent<LoadCompleteEvent>) => void;
   page: number;
+  resizeMode?: ResizeMode;
   source: string;
   style?: ViewStyle;
 };
@@ -34,6 +37,18 @@ type PdfViewProps = {
    * Page (0-indexed) of document to display.
    */
   page: number;
+
+  /**
+   * How pdf page should be scaled to fit in view dimensions.
+   *
+   * `contain`
+   *   - Center and scale to the largest size that does not crop content.
+   * `fitWidth`
+   *   - Scale pdf page so width matches view. If aspect ratio of the pdf
+   *     does not match the view, content will be cropped/space buffered at
+   *     the bottom.
+   */
+  resizeMode?: ResizeMode;
 
   /**
    * Document to display.
@@ -72,6 +87,7 @@ export function PdfView(props: PdfViewProps) {
       onPdfError={onPdfError}
       onPdfLoadComplete={onPdfLoadComplete}
       page={props.page}
+      resizeMode={props.resizeMode}
       source={props.source}
       style={props.style}
     />

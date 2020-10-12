@@ -49,6 +49,12 @@ class PdfViewManager : BaseViewManager<PdfView, PdfViewShadowNode>() {
     view.setPage(page)
   }
 
+  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+  @ReactProp(name = "resizeMode")
+  fun setResizeMode(view: PdfView, mode: String?) {
+    view.setResizeMode(mode ?: ResizeMode.CONTAIN.jsName)
+  }
+
   /**
    * Document to display.
    */

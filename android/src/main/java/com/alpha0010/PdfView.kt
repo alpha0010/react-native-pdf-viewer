@@ -17,9 +17,15 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
 
+enum class ResizeMode(val jsName: String) {
+  CONTAIN("contain"),
+  FIT_WIDTH("fitWidth")
+}
+
 class PdfView(context: Context) : View(context) {
   private var mBitmap: Bitmap
   private var mPage = 0
+  private var mResizeMode = ResizeMode.CONTAIN
   private var mSource = ""
   private val mViewRect = Rect()
 
@@ -34,9 +40,34 @@ class PdfView(context: Context) : View(context) {
   }
 
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+  fun setResizeMode(mode: String) {
+    val resizeMode = when (mode) {
+      ResizeMode.CONTAIN.jsName -> ResizeMode.CONTAIN
+      ResizeMode.FIT_WIDTH.jsName -> ResizeMode.FIT_WIDTH
+      else -> {
+        onError("Unknown resizeMode '$mode'.")
+        return
+      }
+    }
+
+    mResizeMode = resizeMode
+    renderPdf()
+  }
+
+  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   fun setSource(source: String) {
     mSource = source
     renderPdf()
+  }
+
+  private fun computeDestRect(srcWidth: Int, srcHeight: Int): RectF {
+    return when (mResizeMode) {
+      ResizeMode.CONTAIN -> RectF(0f, 0f, width.toFloat(), height.toFloat())
+      ResizeMode.FIT_WIDTH -> {
+        val targetHeight = width.toFloat() * srcHeight.toFloat() / srcWidth.toFloat()
+        RectF(0f, 0f, width.toFloat(), targetHeight)
+      }
+    }
   }
 
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -75,7 +106,7 @@ class PdfView(context: Context) : View(context) {
       val transform = Matrix()
       transform.setRectToRect(
         RectF(0f, 0f, pdfPage.width.toFloat(), pdfPage.height.toFloat()),
-        RectF(0f, 0f, width.toFloat(), height.toFloat()),
+        computeDestRect(pdfPage.width, pdfPage.height),
         Matrix.ScaleToFit.CENTER
       )
       // Api requires bitmap have alpha channel; fill with white so rendered
