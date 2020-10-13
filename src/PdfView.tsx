@@ -55,6 +55,11 @@ type PdfViewProps = {
    */
   source: string;
   style?: ViewStyle;
+
+  /**
+   * Used to locate this view in end-to-end tests.
+   */
+  testID?: string;
 };
 
 const PdfViewNative = requireNativeComponent<PdfViewNativeProps>('RNPdfView');

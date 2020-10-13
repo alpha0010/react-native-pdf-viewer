@@ -111,6 +111,11 @@ type PdfProps = BaseListProps & {
    * Document to display.
    */
   source: string;
+
+  /**
+   * Used to locate this view in end-to-end tests.
+   */
+  testID?: string;
 };
 
 export type PdfRef = {
