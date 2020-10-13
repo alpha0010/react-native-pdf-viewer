@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.3.0...v1.3.1) (2020-10-13)
+
+
+### Bug Fixes
+
+* **types:** support testID on views ([8d8216b](https://github.com/alpha0010/react-native-pdf-viewer/commit/8d8216bd6a27da2bf312e44c04c86b9c6a889b46))
+
 # [1.3.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.2.0...v1.3.0) (2020-10-12)
 
 
