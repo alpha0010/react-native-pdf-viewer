@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.3.1...v1.3.2) (2020-10-25)
+
+
+### Bug Fixes
+
+* **android:** native PdfRenderer is not thread safe ([4dfe574](https://github.com/alpha0010/react-native-pdf-viewer/commit/4dfe5746fb096786fd6e5f4a42191c32559820d8))
+
 ## [1.3.1](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.3.0...v1.3.1) (2020-10-13)
 
 
