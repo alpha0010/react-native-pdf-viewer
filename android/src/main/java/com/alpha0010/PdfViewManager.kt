@@ -50,6 +50,16 @@ class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfV
     view.setPage(page)
   }
 
+  /**
+   * How pdf page should be scaled to fit in view dimensions.
+   *
+   * `contain`
+   *   - Center and scale to the largest size that does not crop content.
+   * `fitWidth`
+   *   - Scale pdf page so width matches view. If aspect ratio of the pdf
+   *     does not match the view, content will be cropped/space buffered at
+   *     the bottom.
+   */
   @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactProp(name = "resizeMode")
   fun setResizeMode(view: PdfView, mode: String?) {

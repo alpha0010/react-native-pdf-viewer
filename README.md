@@ -92,6 +92,13 @@ Props:
 `PdfUtil.unpackAsset(source: string): Promise<string>`
 - Extract a bundled asset and return its absolute path.
 
+## Known Issues
+
+On Android API level < 26 if a page in the pdf is cropped or rotated, the page
+may render in the wrong position. This is due to a bug in the native
+`android.graphics.pdf.PdfRenderer`. (If you are aware of a fix,
+[pull requests welcome](https://github.com/alpha0010/react-native-pdf-viewer/pulls).)
+
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
