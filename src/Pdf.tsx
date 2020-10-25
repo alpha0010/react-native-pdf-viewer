@@ -62,7 +62,7 @@ type BaseListProps = {
 
   /**
    * Fires at most once per frame during scrolling. The frequency of the events
-   * can be contolled using the scrollEventThrottle prop.
+   * can be controlled using the scrollEventThrottle prop.
    */
   onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 

@@ -1,5 +1,6 @@
 package com.alpha0010
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.graphics.pdf.PdfRenderer
@@ -16,13 +17,16 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
+import java.util.concurrent.locks.Lock
+import kotlin.concurrent.withLock
 
 enum class ResizeMode(val jsName: String) {
   CONTAIN("contain"),
   FIT_WIDTH("fitWidth")
 }
 
-class PdfView(context: Context) : View(context) {
+@SuppressLint("ViewConstructor")
+class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
   private var mBitmap: Bitmap
   private var mPage = 0
   private var mResizeMode = ResizeMode.CONTAIN
@@ -86,34 +90,47 @@ class PdfView(context: Context) : View(context) {
         return@launch
       }
 
-      val renderer = try {
-        PdfRenderer(fd)
-      } catch (e: Exception) {
-        fd.close()
-        onError("Failed to open '$mSource' for reading.")
-        return@launch
-      }
-      val pdfPage = try {
-        renderer.openPage(mPage)
-      } catch (e: Exception) {
-        renderer.close()
-        fd.close()
-        onError("Failed to open page '$mPage' of '$mSource' for reading.")
-        return@launch
-      }
+      val pdfPageWidth: Int
+      val pdfPageHeight: Int
+      val bitmap = pdfMutex.withLock {
+        val renderer = try {
+          PdfRenderer(fd)
+        } catch (e: Exception) {
+          fd.close()
+          onError("Failed to open '$mSource' for reading.")
+          return@launch
+        }
+        val pdfPage = try {
+          renderer.openPage(mPage)
+        } catch (e: Exception) {
+          renderer.close()
+          fd.close()
+          onError("Failed to open page '$mPage' of '$mSource' for reading.")
+          return@launch
+        }
 
-      // Scale the pdf page up/down to match the requested render dimensions.
-      val transform = Matrix()
-      transform.setRectToRect(
-        RectF(0f, 0f, pdfPage.width.toFloat(), pdfPage.height.toFloat()),
-        computeDestRect(pdfPage.width, pdfPage.height),
-        Matrix.ScaleToFit.CENTER
-      )
-      // Api requires bitmap have alpha channel; fill with white so rendered
-      // bitmap is opaque.
-      val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-      bitmap.eraseColor(Color.WHITE)
-      pdfPage.render(bitmap, null, transform, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+        pdfPageWidth = pdfPage.width
+        pdfPageHeight = pdfPage.height
+
+        // Scale the pdf page up/down to match the requested render dimensions.
+        val transform = Matrix()
+        transform.setRectToRect(
+          RectF(0f, 0f, pdfPageWidth.toFloat(), pdfPageHeight.toFloat()),
+          computeDestRect(pdfPageWidth, pdfPageHeight),
+          Matrix.ScaleToFit.CENTER
+        )
+        // Api requires bitmap have alpha channel; fill with white so rendered
+        // bitmap is opaque.
+        val rendered = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        rendered.eraseColor(Color.WHITE)
+        pdfPage.render(rendered, null, transform, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+
+        pdfPage.close()
+        renderer.close()
+
+        return@withLock rendered
+      }
+      fd.close()
 
       withContext(Dispatchers.Main) {
         // Post new bitmap for display.
@@ -122,11 +139,7 @@ class PdfView(context: Context) : View(context) {
         invalidate()
       }
 
-      onLoadComplete(pdfPage.width, pdfPage.height)
-
-      pdfPage.close()
-      renderer.close()
-      fd.close()
+      onLoadComplete(pdfPageWidth, pdfPageHeight)
     }
   }
 

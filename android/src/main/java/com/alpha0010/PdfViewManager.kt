@@ -7,8 +7,9 @@ import androidx.annotation.RequiresApi
 import com.facebook.react.uimanager.BaseViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
+import java.util.concurrent.locks.Lock
 
-class PdfViewManager : BaseViewManager<PdfView, PdfViewShadowNode>() {
+class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfViewShadowNode>() {
   private val mMeasureCache = LruCache<String, Size>(128)
 
   override fun getName(): String {
@@ -16,11 +17,11 @@ class PdfViewManager : BaseViewManager<PdfView, PdfViewShadowNode>() {
   }
 
   override fun createViewInstance(reactContext: ThemedReactContext): PdfView {
-    return PdfView(reactContext)
+    return PdfView(reactContext, pdfMutex)
   }
 
   override fun createShadowNodeInstance(): PdfViewShadowNode {
-    return PdfViewShadowNode(mMeasureCache)
+    return PdfViewShadowNode(mMeasureCache, pdfMutex)
   }
 
   override fun getShadowNodeClass(): Class<out PdfViewShadowNode> {

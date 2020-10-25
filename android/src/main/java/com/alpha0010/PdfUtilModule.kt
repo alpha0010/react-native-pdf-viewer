@@ -6,8 +6,10 @@ import android.os.ParcelFileDescriptor
 import androidx.annotation.RequiresApi
 import com.facebook.react.bridge.*
 import java.io.*
+import java.util.concurrent.locks.Lock
+import kotlin.concurrent.withLock
 
-class PdfUtilModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+class PdfUtilModule(reactContext: ReactApplicationContext, private val pdfMutex: Lock) : ReactContextBaseJavaModule(reactContext) {
   override fun getName(): String {
     return "RNPdfUtil"
   }
@@ -56,15 +58,18 @@ class PdfUtilModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       return
     }
 
-    val renderer = try {
-      PdfRenderer(fd)
-    } catch (e: Exception) {
-      fd.close()
-      promise.reject(e)
-      return
+    val pageCount = pdfMutex.withLock {
+      val renderer = try {
+        PdfRenderer(fd)
+      } catch (e: Exception) {
+        fd.close()
+        promise.reject(e)
+        return
+      }
+      val res = renderer.pageCount
+      renderer.close()
+      return@withLock res
     }
-    val pageCount = renderer.pageCount
-    renderer.close()
     fd.close()
 
     promise.resolve(pageCount)
@@ -84,35 +89,38 @@ class PdfUtilModule(reactContext: ReactApplicationContext) : ReactContextBaseJav
       return
     }
 
-    val renderer = try {
-      PdfRenderer(fd)
-    } catch (e: Exception) {
-      fd.close()
-      promise.reject(e)
-      return
-    }
-    // Read dimensions (in pdf units) of all pages.
-    val pages = Arguments.createArray()
-    for (pageNum in 0 until renderer.pageCount) {
-      val pdfPage = try {
-        renderer.openPage(pageNum)
+    val pageSizes = pdfMutex.withLock {
+      val renderer = try {
+        PdfRenderer(fd)
       } catch (e: Exception) {
-        renderer.close()
         fd.close()
         promise.reject(e)
         return
       }
+      // Read dimensions (in pdf units) of all pages.
+      val pages = Arguments.createArray()
+      for (pageNum in 0 until renderer.pageCount) {
+        val pdfPage = try {
+          renderer.openPage(pageNum)
+        } catch (e: Exception) {
+          renderer.close()
+          fd.close()
+          promise.reject(e)
+          return
+        }
 
-      val pageDim = Arguments.createMap()
-      pageDim.putInt("height", pdfPage.height)
-      pageDim.putInt("width", pdfPage.width)
-      pages.pushMap(pageDim)
+        val pageDim = Arguments.createMap()
+        pageDim.putInt("height", pdfPage.height)
+        pageDim.putInt("width", pdfPage.width)
+        pages.pushMap(pageDim)
 
-      pdfPage.close()
+        pdfPage.close()
+      }
+      renderer.close()
+      return@withLock pages
     }
-    renderer.close()
     fd.close()
 
-    promise.resolve(pages)
+    promise.resolve(pageSizes)
   }
 }

@@ -14,8 +14,10 @@ import com.facebook.yoga.YogaMeasureOutput
 import com.facebook.yoga.YogaNode
 import java.io.File
 import java.io.FileNotFoundException
+import java.util.concurrent.locks.Lock
+import kotlin.concurrent.withLock
 
-class PdfViewShadowNode(measureCache: LruCache<String, Size>) : LayoutShadowNode(), YogaMeasureFunction {
+class PdfViewShadowNode(measureCache: LruCache<String, Size>, private val pdfMutex: Lock) : LayoutShadowNode(), YogaMeasureFunction {
   private val mMeasureCache = measureCache
   private var mPage = 0
   private var mPageHeight = 1
@@ -69,25 +71,30 @@ class PdfViewShadowNode(measureCache: LruCache<String, Size>) : LayoutShadowNode
     } catch (e: FileNotFoundException) {
       return
     }
-    val renderer = try {
-      PdfRenderer(fd)
-    } catch (e: Exception) {
-      fd.close()
-      return
-    }
-    val page = try {
-      renderer.openPage(mPage)
-    } catch (e: Exception) {
+    val pageSize = pdfMutex.withLock {
+      val renderer = try {
+        PdfRenderer(fd)
+      } catch (e: Exception) {
+        fd.close()
+        return
+      }
+      val page = try {
+        renderer.openPage(mPage)
+      } catch (e: Exception) {
+        renderer.close()
+        fd.close()
+        return
+      }
+      val res = Size(page.width, page.height)
+      page.close()
       renderer.close()
-      fd.close()
-      return
+      return@withLock res
     }
-    mPageHeight = page.height
-    mPageWidth = page.width
-    mMeasureCache.put(cacheKey, Size(page.width, page.height))
-    page.close()
-    renderer.close()
     fd.close()
+
+    mPageHeight = pageSize.height
+    mPageWidth = pageSize.width
+    mMeasureCache.put(cacheKey, pageSize)
 
     dirty()
   }
