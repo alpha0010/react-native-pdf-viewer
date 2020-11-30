@@ -22,6 +22,9 @@ development, since the component actually knows its own dimensions.
 npm install react-native-pdf-light
 ```
 
+If iOS build fails with `Undefined symbol: __swift_FORCE_LOAD_...`, add an
+empty `.swift` file to the xcode project.
+
 ## Usage
 
 ```js
