@@ -1,9 +1,7 @@
 package com.alpha0010
 
 import android.graphics.pdf.PdfRenderer
-import android.os.Build
 import android.os.ParcelFileDescriptor
-import androidx.annotation.RequiresApi
 import com.facebook.react.bridge.*
 import java.io.*
 import java.util.concurrent.locks.Lock
@@ -46,7 +44,6 @@ class PdfUtilModule(reactContext: ReactApplicationContext, private val pdfMutex:
   /**
    * Get the number of pages of a pdf.
    */
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactMethod
   fun getPageCount(source: String, promise: Promise) {
     val file = File(source)
@@ -78,7 +75,6 @@ class PdfUtilModule(reactContext: ReactApplicationContext, private val pdfMutex:
   /**
    * Get the dimensions of every page.
    */
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactMethod
   fun getPageSizes(source: String, promise: Promise) {
     val file = File(source)

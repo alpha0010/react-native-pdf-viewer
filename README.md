@@ -97,7 +97,10 @@ Props:
 
 ## Known Issues
 
-On Android API level < 26 if a page in the pdf is cropped or rotated, the page
+On Android API level < 26 when directly rendering pages with `PdfView` at a
+non-default aspect ratio (e.g. setting both width and height of the view such
+that the view's aspect ratio does not match the pdf page's aspect ratio) if
+a page in the pdf is cropped or rotated, the page
 may render in the wrong position. This is due to a bug in the native
 `android.graphics.pdf.PdfRenderer`. (If you are aware of a fix,
 [pull requests welcome](https://github.com/alpha0010/react-native-pdf-viewer/pulls).)

@@ -1,11 +1,9 @@
 package com.alpha0010
 
 import android.graphics.pdf.PdfRenderer
-import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.LruCache
 import android.util.Size
-import androidx.annotation.RequiresApi
 import com.facebook.react.uimanager.LayoutShadowNode
 import com.facebook.react.uimanager.annotations.ReactProp
 import com.facebook.yoga.YogaMeasureFunction
@@ -49,7 +47,6 @@ class PdfViewShadowNode(measureCache: LruCache<String, Size>, private val pdfMut
     return YogaMeasureOutput.make(width, width / aspectRatio)
   }
 
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   private fun measurePdf() {
     // Attempt to get page dimensions from cache, to avoid disk I/O.
     val cacheKey = "$mPage-$mSource"
@@ -102,7 +99,6 @@ class PdfViewShadowNode(measureCache: LruCache<String, Size>, private val pdfMut
   /**
    * Page (0-indexed) of document to display.
    */
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactProp(name = "page", defaultInt = 0)
   fun setPage(page: Int) {
     if (mPage != page) {
@@ -114,7 +110,6 @@ class PdfViewShadowNode(measureCache: LruCache<String, Size>, private val pdfMut
   /**
    * Document to display.
    */
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactProp(name = "source")
   fun setSource(source: String?) {
     if (source != null && mSource != source) {

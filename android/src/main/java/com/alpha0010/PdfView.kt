@@ -4,10 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.graphics.pdf.PdfRenderer
-import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.view.View
-import androidx.annotation.RequiresApi
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
@@ -19,6 +17,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.util.concurrent.locks.Lock
 import kotlin.concurrent.withLock
+import kotlin.math.abs
 
 enum class ResizeMode(val jsName: String) {
   CONTAIN("contain"),
@@ -37,13 +36,11 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     mBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
   }
 
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   fun setPage(page: Int) {
     mPage = page
     renderPdf()
   }
 
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   fun setResizeMode(mode: String) {
     val resizeMode = when (mode) {
       ResizeMode.CONTAIN.jsName -> ResizeMode.CONTAIN
@@ -58,7 +55,6 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     renderPdf()
   }
 
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   fun setSource(source: String) {
     mSource = source
     renderPdf()
@@ -74,7 +70,6 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     }
   }
 
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   private fun renderPdf() {
     if (height < 1 || width < 1 || mSource.isEmpty()) {
       // View layout not yet complete, or nothing to render.
@@ -112,17 +107,24 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
         pdfPageWidth = pdfPage.width
         pdfPageHeight = pdfPage.height
 
-        // Scale the pdf page up/down to match the requested render dimensions.
-        val transform = Matrix()
-        transform.setRectToRect(
-          RectF(0f, 0f, pdfPageWidth.toFloat(), pdfPageHeight.toFloat()),
-          computeDestRect(pdfPageWidth, pdfPageHeight),
-          Matrix.ScaleToFit.CENTER
-        )
         // Api requires bitmap have alpha channel; fill with white so rendered
         // bitmap is opaque.
         val rendered = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         rendered.eraseColor(Color.WHITE)
+
+        // Scale the pdf page up/down to match the requested render dimensions.
+        val transform = if (shouldTransformRender(pdfPageWidth, pdfPageHeight, rendered)) {
+          val mtr = Matrix()
+          mtr.setRectToRect(
+            RectF(0f, 0f, pdfPageWidth.toFloat(), pdfPageHeight.toFloat()),
+            computeDestRect(pdfPageWidth, pdfPageHeight),
+            Matrix.ScaleToFit.CENTER
+          )
+          mtr
+        } else {
+          null
+        }
+
         pdfPage.render(rendered, null, transform, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
 
         pdfPage.close()
@@ -141,6 +143,21 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
 
       onLoadComplete(pdfPageWidth, pdfPageHeight)
     }
+  }
+
+  private fun shouldTransformRender(sourceWidth: Int, sourceHeight: Int, bmp: Bitmap): Boolean {
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+      return true
+    }
+
+    // On lower API levels, using a transform matrix can cause incorrect
+    // rendering if the page is rotated or cropped.
+    // Check if transform is actually needed.
+    val aspectRatio = sourceWidth.toFloat() / sourceHeight.toFloat()
+    val targetWidth = bmp.height * aspectRatio
+    val delta = abs(bmp.width - targetWidth)
+    // Transform if error is greater than 4 pixels.
+    return delta > 4
   }
 
   private fun onError(message: String) {
@@ -168,7 +185,6 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     }
   }
 
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     mViewRect.set(0, 0, w, h)
     renderPdf()

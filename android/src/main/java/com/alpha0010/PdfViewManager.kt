@@ -1,9 +1,7 @@
 package com.alpha0010
 
-import android.os.Build
 import android.util.LruCache
 import android.util.Size
-import androidx.annotation.RequiresApi
 import com.facebook.react.uimanager.BaseViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
@@ -44,7 +42,6 @@ class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfV
   /**
    * Page (0-indexed) of document to display.
    */
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactProp(name = "page", defaultInt = 0)
   fun setPage(view: PdfView, page: Int) {
     view.setPage(page)
@@ -60,7 +57,6 @@ class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfV
    *     does not match the view, content will be cropped/space buffered at
    *     the bottom.
    */
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactProp(name = "resizeMode")
   fun setResizeMode(view: PdfView, mode: String?) {
     view.setResizeMode(mode ?: ResizeMode.CONTAIN.jsName)
@@ -69,7 +65,6 @@ class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfV
   /**
    * Document to display.
    */
-  @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
   @ReactProp(name = "source")
   fun setSource(view: PdfView, source: String?) {
     view.setSource(source ?: "")
