@@ -1,3 +1,10 @@
+## [1.3.3](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.3.2...v1.3.3) (2020-12-04)
+
+
+### Bug Fixes
+
+* **android:** position pages at default aspect ratio for API < 26 ([3aa2c45](https://github.com/alpha0010/react-native-pdf-viewer/commit/3aa2c4537838f0f9554cb02bcbe70cd946bca059))
+
 ## [1.3.2](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.3.1...v1.3.2) (2020-10-25)
 
 
