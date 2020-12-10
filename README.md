@@ -64,6 +64,7 @@ The following props are forwarded to the underlying
 - `onScroll`
 - `onScrollBeginDrag`
 - `onScrollEndDrag`
+- `refreshControl`
 - `scrollEventThrottle`
 
 Methods:

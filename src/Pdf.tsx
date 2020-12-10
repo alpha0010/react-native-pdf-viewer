@@ -9,6 +9,7 @@ import {
   FlatList,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  RefreshControlProps,
   StyleSheet,
   View,
 } from 'react-native';
@@ -76,6 +77,12 @@ type BaseListProps = {
    * begins to glide.
    */
   onScrollEndDrag?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+
+  /**
+   * A RefreshControl component, used to provide pull-to-refresh
+   * functionality for the ScrollView.
+   */
+  refreshControl?: React.ReactElement<RefreshControlProps>;
 
   /**
    * This controls how often the scroll event will be fired while scrolling
@@ -262,6 +269,7 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
       onScroll={props.onScroll}
       onScrollBeginDrag={props.onScrollBeginDrag}
       onScrollEndDrag={props.onScrollEndDrag}
+      refreshControl={props.refreshControl}
       scrollEventThrottle={props.scrollEventThrottle}
       testID="pdfFlatList"
     />
