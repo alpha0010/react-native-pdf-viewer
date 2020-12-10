@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.3.3...v1.4.0) (2020-12-10)
+
+
+### Features
+
+* expose FlatList refresh control ([aa6c0f8](https://github.com/alpha0010/react-native-pdf-viewer/commit/aa6c0f85dc01c2de5c75bccb4077bce0f6c2ab8a))
+
 ## [1.3.3](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.3.2...v1.3.3) (2020-12-04)
 
 
