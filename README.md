@@ -106,6 +106,13 @@ may render in the wrong position. This is due to a bug in the native
 `android.graphics.pdf.PdfRenderer`. (If you are aware of a fix,
 [pull requests welcome](https://github.com/alpha0010/react-native-pdf-viewer/pulls).)
 
+## Alternatives
+
+- [react-native-pdf](https://github.com/wonday/react-native-pdf)
+- [react-native-file-viewer](https://github.com/vinzscam/react-native-file-viewer)
+- [react-native-view-pdf](https://github.com/rumax/react-native-PDFView)
+- [rn-pdf-reader-js](https://github.com/xcarpentier/rn-pdf-reader-js)
+
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
