@@ -69,4 +69,9 @@ class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfV
   fun setSource(view: PdfView, source: String?) {
     view.setSource(source ?: "")
   }
+
+  @ReactProp(name = "useCache", defaultBoolean = false)
+  fun setUseCache(view: PdfView, useCache: Boolean) {
+    view.setUseCache(useCache)
+  }
 }

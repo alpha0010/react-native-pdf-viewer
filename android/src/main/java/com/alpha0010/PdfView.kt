@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
+import java.security.MessageDigest
 import java.util.concurrent.locks.Lock
 import kotlin.concurrent.withLock
 import kotlin.math.abs
@@ -30,6 +31,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
   private var mPage = 0
   private var mResizeMode = ResizeMode.CONTAIN
   private var mSource = ""
+  private var mUseCache = false
   private val mViewRect = Rect()
 
   init {
@@ -60,6 +62,10 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     renderPdf()
   }
 
+  fun setUseCache(useCache: Boolean) {
+    mUseCache = useCache
+  }
+
   private fun computeDestRect(srcWidth: Int, srcHeight: Int): RectF {
     return when (mResizeMode) {
       ResizeMode.CONTAIN -> RectF(0f, 0f, width.toFloat(), height.toFloat())
@@ -67,6 +73,42 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
         val targetHeight = width.toFloat() * srcHeight.toFloat() / srcWidth.toFloat()
         RectF(0f, 0f, width.toFloat(), targetHeight)
       }
+    }
+  }
+
+  private fun getCacheFile(renderWidth: Int, renderHeight: Int): File {
+    val cacheKey = MessageDigest.getInstance("SHA-256")
+      .digest("$mPage-$renderWidth-$renderHeight-${mResizeMode.jsName}-$mSource".toByteArray())
+      .joinToString("") { "%02x".format(it) }
+    val cacheDir = File(context.cacheDir, "pdfRenderCache").also { it.mkdirs() }
+    return File(cacheDir, "$cacheKey.jpg")
+  }
+
+  private fun loadCachedRender(renderWidth: Int, renderHeight: Int): Bitmap? {
+    if (!mUseCache) {
+      return null
+    }
+    return try {
+      val sourceFile = File(mSource)
+      val renderFile = getCacheFile(renderWidth, renderHeight)
+      if (renderFile.lastModified() >= sourceFile.lastModified()) {
+        BitmapFactory.decodeFile(renderFile.absolutePath)
+      } else {
+        null
+      }
+    } catch (e: Throwable) {
+      null
+    }
+  }
+
+  private fun saveCachedRender(rendered: Bitmap) {
+    if (!mUseCache) {
+      return
+    }
+    try {
+      getCacheFile(rendered.width, rendered.height).outputStream()
+        .use { rendered.compress(Bitmap.CompressFormat.JPEG, 95, it) }
+    } catch (ignored: Throwable) {
     }
   }
 
@@ -107,6 +149,12 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
         pdfPageWidth = pdfPage.width
         pdfPageHeight = pdfPage.height
 
+        loadCachedRender(width, height)?.let {
+          pdfPage.close()
+          renderer.close()
+          return@withLock it
+        }
+
         // Api requires bitmap have alpha channel; fill with white so rendered
         // bitmap is opaque.
         val rendered = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -130,7 +178,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
         pdfPage.close()
         renderer.close()
 
-        return@withLock rendered
+        return@withLock rendered.also { saveCachedRender(it) }
       }
       fd.close()
 
