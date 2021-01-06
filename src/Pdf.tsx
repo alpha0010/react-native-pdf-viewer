@@ -115,6 +115,12 @@ type PdfProps = BaseListProps & {
   onMeasurePages?: (measurements: PageMeasurement[]) => void;
 
   /**
+   * Size pages such that each page can be displayed without cutoff. Applies
+   * when device is in the specified orientation.
+   */
+  shrinkToFit?: 'never' | 'portrait' | 'landscape' | 'always';
+
+  /**
    * Document to display.
    */
   source: string;
@@ -145,6 +151,7 @@ const separatorSize = 8;
 function useMeasurePages(
   layoutWidth: number,
   pageDims: PageDim[],
+  maxPageHeight: number,
   onMeasurePages?: (measurements: PageMeasurement[]) => void
 ) {
   useEffect(() => {
@@ -155,13 +162,16 @@ function useMeasurePages(
     let offset = 0;
     for (const pageSize of pageDims) {
       // Measurements include scaling to fill width,
-      const itemHeight = (layoutWidth * pageSize.height) / pageSize.width;
+      const itemHeight = Math.min(
+        maxPageHeight,
+        (layoutWidth * pageSize.height) / pageSize.width
+      );
       measurements.push({ itemHeight, offset });
       // and offset for separator between pages.
       offset += itemHeight + separatorSize;
     }
     onMeasurePages(measurements);
-  }, [layoutWidth, onMeasurePages, pageDims]);
+  }, [layoutWidth, maxPageHeight, onMeasurePages, pageDims]);
 }
 
 /**
@@ -211,7 +221,25 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
     };
   }, [onError, onLoadComplete, setPageDims, source]);
 
-  useMeasurePages(flatListLayout.width, pageDims, props.onMeasurePages);
+  let maxPageHeight: number | undefined;
+  if (flatListLayout.height > 0) {
+    if (
+      props.shrinkToFit === 'always' ||
+      (flatListLayout.height > flatListLayout.width &&
+        props.shrinkToFit === 'portrait') ||
+      (flatListLayout.height < flatListLayout.width &&
+        props.shrinkToFit === 'landscape')
+    ) {
+      maxPageHeight = flatListLayout.height;
+    }
+  }
+
+  useMeasurePages(
+    flatListLayout.width,
+    pageDims,
+    maxPageHeight ?? Number.MAX_VALUE,
+    props.onMeasurePages
+  );
 
   return (
     <FlatList
@@ -228,16 +256,22 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
             'Pdf list getItemLayout() could not determine screen size.'
           );
         } else {
+          const bound = maxPageHeight ?? Number.MAX_VALUE;
           let pageSize = data[index];
-          itemHeight =
-            (flatListLayout.width * pageSize.height) / pageSize.width;
+          itemHeight = Math.min(
+            bound,
+            (flatListLayout.width * pageSize.height) / pageSize.width
+          );
           // Add up the separators and heights of pages before the current page.
           offset = 0;
           for (let i = 0; i < index; ++i) {
             pageSize = data[i];
             offset +=
               separatorSize +
-              (flatListLayout.width * pageSize.height) / pageSize.width;
+              Math.min(
+                bound,
+                (flatListLayout.width * pageSize.height) / pageSize.width
+              );
           }
         }
         return {
@@ -259,7 +293,11 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
       }}
       ref={listRef}
       renderItem={({ index }) => (
-        <PdfView page={index} source={source} style={styles.page} />
+        <View style={[styles.pageAlign, { maxHeight: maxPageHeight }]}>
+          <View>
+            <PdfView page={index} source={source} style={styles.page} />
+          </View>
+        </View>
       )}
       windowSize={5}
       initialScrollIndex={props.initialScrollIndex}
@@ -285,5 +323,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.23,
     shadowRadius: 2.62,
   },
+  pageAlign: { alignItems: 'center' },
   separator: { height: separatorSize },
 });

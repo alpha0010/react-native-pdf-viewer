@@ -33,23 +33,38 @@ exports[`renders pdf viewer 1`] = `
 `;
 
 exports[`viewer renders pages 1`] = `
-<RNPdfView
-  onPdfError={[Function]}
-  onPdfLoadComplete={[Function]}
-  page={0}
-  source="test.pdf"
+<View
   style={
-    Object {
-      "backgroundColor": "#fff",
-      "elevation": 4,
-      "shadowColor": "#000",
-      "shadowOffset": Object {
-        "height": 2,
-        "width": 0,
+    Array [
+      Object {
+        "alignItems": "center",
       },
-      "shadowOpacity": 0.23,
-      "shadowRadius": 2.62,
-    }
+      Object {
+        "maxHeight": undefined,
+      },
+    ]
   }
-/>
+>
+  <View>
+    <RNPdfView
+      onPdfError={[Function]}
+      onPdfLoadComplete={[Function]}
+      page={0}
+      source="test.pdf"
+      style={
+        Object {
+          "backgroundColor": "#fff",
+          "elevation": 4,
+          "shadowColor": "#000",
+          "shadowOffset": Object {
+            "height": 2,
+            "width": 0,
+          },
+          "shadowOpacity": 0.23,
+          "shadowRadius": 2.62,
+        }
+      }
+    />
+  </View>
+</View>
 `;

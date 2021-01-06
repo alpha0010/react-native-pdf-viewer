@@ -52,6 +52,9 @@ Props:
   - Passed the page count of the loaded pdf.
 - `onMeasurePages: (measurements: { itemHeight: number, offset: number }[]) => void`
   - Optional: Callback to receive layout details of all pages.
+- `shrinkToFit: 'never' | 'portrait' | 'landscape' | 'always'`
+  - Optional: Size pages such that each page can be displayed without cutoff.
+  - Applies when device is in the specified orientation.
 - `source: string`
   - Document to display.
 
