@@ -16,12 +16,14 @@ jobs:
     - uses: actions/cache@v2
       id: cache-node
       with:
-        path: node_modules
-        key: ${{ hashFiles('package.json') }}
+        path: |
+          node_modules
+          example/node_modules
+        key: ${{ hashFiles('package.json', 'example/package.json') }}
     - uses: actions/setup-node@v1
       with:
         node-version: 12.x
-    - run: yarn install
+    - run: yarn example && yarn install
       if: steps.cache-node.outputs.cache-hit != 'true'
     - run: yarn lint
     - run: yarn typescript
