@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.4.0...v1.5.0) (2021-01-06)
+
+
+### Features
+
+* support shrink pages to fit in document viewer ([f1fa4ef](https://github.com/alpha0010/react-native-pdf-viewer/commit/f1fa4efe658c52e336734b022fb242da94ec89b0))
+
 # [1.4.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.3.3...v1.4.0) (2020-12-10)
 
 
