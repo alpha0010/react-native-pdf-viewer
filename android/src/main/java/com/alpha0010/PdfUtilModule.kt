@@ -13,35 +13,6 @@ class PdfUtilModule(reactContext: ReactApplicationContext, private val pdfMutex:
   }
 
   /**
-   * Extract a bundled asset and return its absolute path.
-   */
-  @ReactMethod
-  fun unpackAsset(source: String, promise: Promise) {
-    val file = File(reactApplicationContext.cacheDir, source)
-    if (!file.exists()) {
-      val asset: InputStream
-      try {
-        asset = reactApplicationContext.assets.open(source)
-      } catch (e: IOException) {
-        promise.reject(e)
-        return
-      }
-
-      val output = FileOutputStream(file)
-      val buffer = ByteArray(1024)
-      var size = asset.read(buffer)
-      while (size != -1) {
-        output.write(buffer, 0, size)
-        size = asset.read(buffer)
-      }
-      output.close()
-      asset.close()
-    }
-
-    promise.resolve(file.absolutePath)
-  }
-
-  /**
    * Get the number of pages of a pdf.
    */
   @ReactMethod

@@ -12,11 +12,6 @@ type PdfUtilType = {
    * Get the dimensions of every page.
    */
   getPageSizes(source: string): Promise<PageDim[]>;
-
-  /**
-   * Extract a bundled asset and return its absolute path.
-   */
-  unpackAsset(source: string): Promise<string>;
 };
 
 /**

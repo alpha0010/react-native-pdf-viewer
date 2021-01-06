@@ -1,6 +1,6 @@
 # react-native-pdf-light
 
-[![npm version](https://badge.fury.io/js/react-native-pdf-light.svg)](https://www.npmjs.com/package/react-native-pdf-light)
+[![npm version](https://img.shields.io/npm/v/react-native-pdf-light)](https://www.npmjs.com/package/react-native-pdf-light)
 ![CI](https://github.com/alpha0010/react-native-pdf-viewer/workflows/CI/badge.svg)
 
 PDF viewer for React Native. Implemented with platform native render functions
@@ -95,9 +95,6 @@ Props:
 
 `PdfUtil.getPageSizes(source: string): Promise<{ height: number; width: number }[]>`
 - Get the dimensions of every page.
-
-`PdfUtil.unpackAsset(source: string): Promise<string>`
-- Extract a bundled asset and return its absolute path.
 
 ## Known Issues
 

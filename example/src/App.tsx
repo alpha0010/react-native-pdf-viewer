@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Pdf, PdfUtil } from 'react-native-pdf-light';
+import { Dirs, FileSystem } from 'react-native-file-access';
+import { Pdf } from 'react-native-pdf-light';
 
 export default function App() {
   const [source, setSource] = useState<string | null>(null);
   useEffect(() => {
-    PdfUtil.unpackAsset('sample.pdf').then(setSource);
+    const asset = 'sample.pdf';
+    const dest = `${Dirs.CacheDir}/${asset}`;
+    FileSystem.cpAsset(asset, dest)
+      .catch(() => {}) // Ignore errors.
+      .finally(() => setSource(dest));
   }, [setSource]);
 
   return source == null ? null : (

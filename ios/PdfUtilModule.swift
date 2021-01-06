@@ -6,35 +6,6 @@ class PdfUtilModule: NSObject {
     }
 
     /**
-     * Extract a bundled asset and return its absolute path.
-     */
-    @objc(unpackAsset:withResolver:withRejecter:)
-    func unpackAsset(source: String, resolve:RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {
-        guard let cacheDirectory = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.cachesDirectory, FileManager.SearchPathDomainMask.userDomainMask, true).first else {
-            reject("", "Unable to find cache directory", nil)
-            return
-        }
-        let destination = "\(cacheDirectory)/\(source)"
-        guard !FileManager.default.fileExists(atPath: destination) else {
-            resolve(destination)
-            return
-        }
-        guard let asset = Bundle.main.path(forResource: source, ofType: nil) else {
-            reject("ENOENT", "Asset \(source) not found", nil)
-            return
-        }
-
-        do {
-            try FileManager.default.copyItem(atPath: asset, toPath: destination)
-        } catch {
-            reject("", "Failed to copy assset to \(destination)", error)
-            return
-        }
-
-        resolve(destination)
-    }
-
-    /**
      * Get the number of pages of a pdf.
      */
     @objc(getPageCount:withResolver:withRejecter:)
