@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.5.0...v1.5.1) (2021-01-27)
+
+
+### Bug Fixes
+
+* **android:** avoid package namespace collision ([bc38258](https://github.com/alpha0010/react-native-pdf-viewer/commit/bc38258b70a132e884c82f6cd7aad860cda85b61))
+
 # [1.5.0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.4.0...v1.5.0) (2021-01-06)
 
 
