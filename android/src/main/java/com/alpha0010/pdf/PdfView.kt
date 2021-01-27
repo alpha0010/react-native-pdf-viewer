@@ -1,4 +1,4 @@
-package com.alpha0010
+package com.alpha0010.pdf
 
 import android.annotation.SuppressLint
 import android.content.Context

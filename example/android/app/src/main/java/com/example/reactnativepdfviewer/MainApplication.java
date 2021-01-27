@@ -3,7 +3,7 @@ package com.example.reactnativepdfviewer;
 import android.app.Application;
 import android.content.Context;
 
-import com.alpha0010.PdfViewPackage;
+import com.alpha0010.pdf.PdfViewPackage;
 import com.facebook.react.PackageList;
 import com.facebook.react.ReactApplication;
 import com.facebook.react.ReactInstanceManager;

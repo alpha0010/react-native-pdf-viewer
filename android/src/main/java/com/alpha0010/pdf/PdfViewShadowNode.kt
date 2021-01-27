@@ -1,4 +1,4 @@
-package com.alpha0010
+package com.alpha0010.pdf
 
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor

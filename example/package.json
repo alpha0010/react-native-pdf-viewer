@@ -11,7 +11,7 @@
   "dependencies": {
     "react": "16.13.1",
     "react-native": "0.63.3",
-    "react-native-file-access": "^0.6.0"
+    "react-native-file-access": "^1.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.9.6",
