@@ -1,3 +1,10 @@
+## [1.5.2](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.5.1...v1.5.2) (2021-02-18)
+
+
+### Features
+
+* support measuring native view ([565f9c9](https://github.com/alpha0010/react-native-pdf-viewer/commit/565f9c9b1b75d89cc649ba1d7b0f729528f447e1))
+
 ## [1.5.1](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.5.0...v1.5.1) (2021-01-27)
 
 
