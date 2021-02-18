@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import {
+  LayoutChangeEvent,
   NativeSyntheticEvent,
   requireNativeComponent,
   ViewStyle,
@@ -12,6 +13,7 @@ export type LoadCompleteEvent = { height: number; width: number };
 export type ResizeMode = 'contain' | 'fitWidth';
 
 type PdfViewNativeProps = {
+  onLayout?: (event: LayoutChangeEvent) => void;
   onPdfError: (event: NativeSyntheticEvent<ErrorEvent>) => void;
   onPdfLoadComplete: (event: NativeSyntheticEvent<LoadCompleteEvent>) => void;
   page: number;
@@ -25,6 +27,13 @@ type PdfViewProps = {
    * Callback to handle errors.
    */
   onError?: (event: ErrorEvent) => void;
+
+  /**
+   * Callback for measuring the native view.
+   *
+   * Triggers on mount and layout changes.
+   */
+  onLayout?: (event: LayoutChangeEvent) => void;
 
   /**
    * Callback to handle pdf load completion.
@@ -68,7 +77,7 @@ const PdfViewNative = requireNativeComponent<PdfViewNativeProps>('RNPdfView');
  * Single page of a pdf.
  */
 export function PdfView(props: PdfViewProps) {
-  const { onError, onLoadComplete } = props;
+  const { onError, onLayout, onLoadComplete } = props;
 
   const onPdfError = useCallback(
     (event: NativeSyntheticEvent<ErrorEvent>) => {
@@ -89,6 +98,7 @@ export function PdfView(props: PdfViewProps) {
 
   return (
     <PdfViewNative
+      onLayout={onLayout}
       onPdfError={onPdfError}
       onPdfLoadComplete={onPdfLoadComplete}
       page={props.page}
