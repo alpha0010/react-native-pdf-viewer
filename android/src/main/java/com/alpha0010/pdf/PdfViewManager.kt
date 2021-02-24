@@ -10,21 +10,15 @@ import java.util.concurrent.locks.Lock
 class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfViewShadowNode>() {
   private val mMeasureCache = LruCache<String, Size>(128)
 
-  override fun getName(): String {
-    return "RNPdfView"
-  }
+  override fun getName() = "RNPdfView"
 
   override fun createViewInstance(reactContext: ThemedReactContext): PdfView {
     return PdfView(reactContext, pdfMutex)
   }
 
-  override fun createShadowNodeInstance(): PdfViewShadowNode {
-    return PdfViewShadowNode(mMeasureCache, pdfMutex)
-  }
+  override fun createShadowNodeInstance() = PdfViewShadowNode(mMeasureCache, pdfMutex)
 
-  override fun getShadowNodeClass(): Class<out PdfViewShadowNode> {
-    return PdfViewShadowNode::class.java
-  }
+  override fun getShadowNodeClass() = PdfViewShadowNode::class.java
 
   override fun getExportedCustomBubblingEventTypeConstants(): MutableMap<String, Any> {
     return mutableMapOf(
@@ -39,13 +33,16 @@ class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfV
 
   override fun updateExtraData(root: PdfView, extraData: Any?) {}
 
+  override fun onAfterUpdateTransaction(view: PdfView) {
+    super.onAfterUpdateTransaction(view)
+    view.renderPdf()
+  }
+
   /**
    * Page (0-indexed) of document to display.
    */
   @ReactProp(name = "page", defaultInt = 0)
-  fun setPage(view: PdfView, page: Int) {
-    view.setPage(page)
-  }
+  fun setPage(view: PdfView, page: Int) = view.setPage(page)
 
   /**
    * How pdf page should be scaled to fit in view dimensions.
@@ -66,7 +63,5 @@ class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfV
    * Document to display.
    */
   @ReactProp(name = "source")
-  fun setSource(view: PdfView, source: String?) {
-    view.setSource(source ?: "")
-  }
+  fun setSource(view: PdfView, source: String?) = view.setSource(source ?: "")
 }

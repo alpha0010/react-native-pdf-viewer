@@ -27,6 +27,7 @@ enum class ResizeMode(val jsName: String) {
 @SuppressLint("ViewConstructor")
 class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
   private var mBitmap: Bitmap
+  private var mDirty = false
   private var mPage = 0
   private var mResizeMode = ResizeMode.CONTAIN
   private var mSource = ""
@@ -38,7 +39,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
 
   fun setPage(page: Int) {
     mPage = page
-    renderPdf()
+    mDirty = true
   }
 
   fun setResizeMode(mode: String) {
@@ -52,12 +53,12 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     }
 
     mResizeMode = resizeMode
-    renderPdf()
+    mDirty = true
   }
 
   fun setSource(source: String) {
     mSource = source
-    renderPdf()
+    mDirty = true
   }
 
   private fun computeDestRect(srcWidth: Int, srcHeight: Int): RectF {
@@ -70,11 +71,12 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     }
   }
 
-  private fun renderPdf() {
-    if (height < 1 || width < 1 || mSource.isEmpty()) {
+  fun renderPdf() {
+    if (height < 1 || width < 1 || mSource.isEmpty() || !mDirty) {
       // View layout not yet complete, or nothing to render.
       return
     }
+    mDirty = false
 
     CoroutineScope(Dispatchers.Main).launch(Dispatchers.IO) {
       val file = File(mSource)
@@ -187,6 +189,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
     mViewRect.set(0, 0, w, h)
+    mDirty = true
     renderPdf()
   }
 }
