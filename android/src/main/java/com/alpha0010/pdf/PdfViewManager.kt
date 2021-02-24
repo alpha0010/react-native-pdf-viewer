@@ -38,6 +38,9 @@ class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfV
     view.renderPdf()
   }
 
+  @ReactProp(name = "annotation")
+  fun setAnnotation(view: PdfView, source: String?) = view.setAnnotation(source ?: "")
+
   /**
    * Page (0-indexed) of document to display.
    */

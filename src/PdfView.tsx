@@ -13,6 +13,7 @@ export type LoadCompleteEvent = { height: number; width: number };
 export type ResizeMode = 'contain' | 'fitWidth';
 
 type PdfViewNativeProps = {
+  annotation?: string;
   onLayout?: (event: LayoutChangeEvent) => void;
   onPdfError: (event: NativeSyntheticEvent<ErrorEvent>) => void;
   onPdfLoadComplete: (event: NativeSyntheticEvent<LoadCompleteEvent>) => void;
@@ -23,6 +24,11 @@ type PdfViewNativeProps = {
 };
 
 type PdfViewProps = {
+  /**
+   * Path to annotation data.
+   */
+  annotation?: string;
+
   /**
    * Callback to handle errors.
    */
@@ -98,6 +104,7 @@ export function PdfView(props: PdfViewProps) {
 
   return (
     <PdfViewNative
+      annotation={props.annotation}
       onLayout={onLayout}
       onPdfError={onPdfError}
       onPdfLoadComplete={onPdfLoadComplete}

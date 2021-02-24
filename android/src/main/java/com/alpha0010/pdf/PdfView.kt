@@ -5,6 +5,8 @@ import android.content.Context
 import android.graphics.*
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
+import android.util.TypedValue
+import android.util.TypedValue.COMPLEX_UNIT_DIP
 import android.view.View
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
@@ -13,11 +15,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.concurrent.locks.Lock
 import kotlin.concurrent.withLock
 import kotlin.math.abs
+import kotlin.math.hypot
 
 enum class ResizeMode(val jsName: String) {
   CONTAIN("contain"),
@@ -26,6 +31,7 @@ enum class ResizeMode(val jsName: String) {
 
 @SuppressLint("ViewConstructor")
 class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
+  private var mAnnotation = emptyList<AnnotationPage>()
   private var mBitmap: Bitmap
   private var mDirty = false
   private var mPage = 0
@@ -35,6 +41,23 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
 
   init {
     mBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
+  }
+
+  fun setAnnotation(source: String) {
+    if (source.isEmpty()) {
+      if (mAnnotation.isNotEmpty()) {
+        mAnnotation = emptyList()
+        mDirty = true
+      }
+      return
+    }
+
+    try {
+      mAnnotation = Json.decodeFromString(File(source).readText())
+      mDirty = true
+    } catch (e: Exception) {
+      onError("Failed to load annotation from '$source'. ${e.message}")
+    }
   }
 
   fun setPage(page: Int) {
@@ -68,6 +91,71 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
         val targetHeight = width.toFloat() * srcHeight.toFloat() / srcWidth.toFloat()
         RectF(0f, 0f, width.toFloat(), targetHeight)
       }
+    }
+  }
+
+  private fun computeDist(a: List<Float>, b: List<Float>, scaleX: Int, scaleY: Int): Float {
+    return hypot(scaleX * (a[0] - b[0]), scaleY * (a[1] - b[1]))
+  }
+
+  private fun computePath(coordinates: List<List<Float>>, scaleX: Int, scaleY: Int): Path {
+    return Path().apply {
+      var prevPoint = coordinates.first()
+      moveTo(prevPoint[0] * scaleX, prevPoint[1] * scaleY)
+      for (point in coordinates.drop(1)) {
+        if (computeDist(prevPoint, point, scaleX, scaleY) < 8) {
+          // Smooth small irregularities.
+          continue
+        }
+        val midX = (prevPoint[0] + point[0]) / 2
+        val midY = (prevPoint[1] + point[1]) / 2
+        quadTo(
+          prevPoint[0] * scaleX, prevPoint[1] * scaleY,
+          midX * scaleX, midY * scaleY
+        )
+        prevPoint = point
+      }
+      prevPoint = coordinates.last()
+      lineTo(prevPoint[0] * scaleX, prevPoint[1] * scaleY)
+    }
+  }
+
+  private fun renderAnnotation(bitmap: Bitmap) {
+    if (mAnnotation.size <= mPage) {
+      return
+    }
+    val metrics = resources.displayMetrics
+    val ctx = Canvas(bitmap)
+    val paint = Paint()
+    paint.isAntiAlias = true
+    paint.style = Paint.Style.STROKE
+    paint.strokeCap = Paint.Cap.ROUND
+    paint.strokeJoin = Paint.Join.ROUND
+    for (stroke in mAnnotation[mPage].strokes) {
+      if (stroke.path.size < 2) {
+        continue
+      }
+      paint.color = Color.parseColor(stroke.color)
+      paint.strokeWidth = TypedValue.applyDimension(COMPLEX_UNIT_DIP, stroke.width, metrics)
+      ctx.drawPath(computePath(stroke.path, bitmap.width, bitmap.height), paint)
+    }
+
+    paint.reset()
+    paint.isAntiAlias = true
+    paint.textAlign = Paint.Align.LEFT
+    val bounds = Rect()
+    val factor = TypedValue.applyDimension(COMPLEX_UNIT_DIP, 1000f, metrics)
+    for (msg in mAnnotation[mPage].text) {
+      paint.color = Color.parseColor(msg.color)
+      val scaledFont = 9 + (msg.fontSize * bitmap.width) / factor
+      paint.textSize = TypedValue.applyDimension(COMPLEX_UNIT_DIP, scaledFont, metrics)
+      paint.getTextBounds(msg.str, 0, msg.str.length, bounds)
+      ctx.drawText(
+        msg.str,
+        bitmap.width * msg.point[0],
+        bitmap.height * msg.point[1] - bounds.top,
+        paint
+      )
     }
   }
 
@@ -135,6 +223,8 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
         return@withLock rendered
       }
       fd.close()
+
+      renderAnnotation(bitmap)
 
       withContext(Dispatchers.Main) {
         // Post new bitmap for display.

@@ -98,6 +98,11 @@ type BaseListProps = {
 
 type PdfProps = BaseListProps & {
   /**
+   * Path to annotation data.
+   */
+  annotation?: string;
+
+  /**
    * Callback to handle errors.
    */
   onError?: (error: Error) => void;
@@ -295,7 +300,12 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
       renderItem={({ index }) => (
         <View style={[styles.pageAlign, { maxHeight: maxPageHeight }]}>
           <View>
-            <PdfView page={index} source={source} style={styles.page} />
+            <PdfView
+              annotation={props.annotation}
+              page={index}
+              source={source}
+              style={styles.page}
+            />
           </View>
         </View>
       )}
