@@ -1,3 +1,15 @@
+# [2.0.0-0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.5.2...v2.0.0-0) (2021-02-24)
+
+
+### Bug Fixes
+
+* **android:** reduce unnecessary rerenders ([d960f5d](https://github.com/alpha0010/react-native-pdf-viewer/commit/d960f5ddccd49731f04262596c1749b2d2f48c04))
+
+
+### Features
+
+* **android:** support annotation ([dca5f16](https://github.com/alpha0010/react-native-pdf-viewer/commit/dca5f164728b42ce7a321185bb54d93307017e4f))
+
 ## [1.5.2](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.5.1...v1.5.2) (2021-02-18)
 
 
