@@ -1,3 +1,10 @@
+# [2.0.0-1](https://github.com/alpha0010/react-native-pdf-viewer/compare/v2.0.0-0...v2.0.0-1) (2021-02-25)
+
+
+### Features
+
+* **ios:** support annotation ([54ef81c](https://github.com/alpha0010/react-native-pdf-viewer/commit/54ef81c6c120dfe4020b30b16d79e9e7a54217c4))
+
 # [2.0.0-0](https://github.com/alpha0010/react-native-pdf-viewer/compare/v1.5.2...v2.0.0-0) (2021-02-24)
 
 
