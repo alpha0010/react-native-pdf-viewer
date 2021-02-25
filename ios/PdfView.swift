@@ -4,12 +4,14 @@ enum ResizeMode: String {
 }
 
 class PdfView: UIView {
+    @objc var annotation = "" { didSet { loadAnnotation() } }
     @objc var page: NSNumber = 0 { didSet { renderPdf() } }
     @objc var resizeMode = ResizeMode.CONTAIN.rawValue { didSet { validateResizeMode() } }
     @objc var source = "" { didSet { renderPdf() } }
     @objc var onPdfError: RCTBubblingEventBlock?
     @objc var onPdfLoadComplete: RCTBubblingEventBlock?
 
+    private var annotationData = [AnnotationPage]()
     private var previousBounds: CGRect = .zero
     private var realResizeMode = ResizeMode.CONTAIN
 
@@ -21,6 +23,20 @@ class PdfView: UIView {
         super.layoutSubviews()
     }
 
+    private func loadAnnotation() {
+        let decoder = JSONDecoder()
+        do {
+            let data = try Data(contentsOf: URL(fileURLWithPath: annotation))
+            annotationData = try decoder.decode([AnnotationPage].self, from: data)
+        } catch {
+            dispatchOnError(
+                message: "Failed to load annotation from '\(annotation)'. \(error.localizedDescription)"
+            )
+            return
+        }
+        renderPdf()
+    }
+
     private func validateResizeMode() {
         guard let resizeEnum = ResizeMode(rawValue: resizeMode) else {
             dispatchOnError(message: "Unknown resizeMode '\(resizeMode)'.")
@@ -29,6 +45,77 @@ class PdfView: UIView {
 
         realResizeMode = resizeEnum
         renderPdf()
+    }
+
+    private func parseColor(_ hex: String) -> UIColor {
+        guard let colorInt = UInt64(hex.dropFirst(), radix: 16) else {
+            return UIColor.black
+        }
+        return UIColor(
+            red: CGFloat((colorInt & 0xFF0000) >> 16) / 255.0,
+            green: CGFloat((colorInt & 0x00FF00) >> 8) / 255.0,
+            blue: CGFloat(colorInt & 0x0000FF) / 255.0,
+            alpha: CGFloat(1.0)
+        )
+    }
+
+    private func makeCGPoint(_ point: [CGFloat], _ scaleX: CGFloat, _ scaleY: CGFloat) -> CGPoint {
+        return CGPoint(x: scaleX * point[0], y: scaleY * point[1])
+    }
+
+    private func computeDist(_ a: [CGFloat], _ b: [CGFloat], scaleX: CGFloat, scaleY: CGFloat) -> CGFloat {
+        return hypot(scaleX * (a[0] - b[0]), scaleY * (a[1] - b[1]))
+    }
+
+    private func computePath(_ context: CGContext, _ coordinates: [[CGFloat]], scaleX: CGFloat, scaleY: CGFloat) {
+        var prevPoint = coordinates[0]
+        context.move(to: makeCGPoint(prevPoint, scaleX, scaleY))
+        for point in coordinates.dropFirst() {
+            guard computeDist(prevPoint, point, scaleX: scaleX, scaleY: scaleY) > 3 else {
+                // Smooth small irregularities.
+                continue
+            }
+            let midX = (prevPoint[0] + point[0]) / 2
+            let midY = (prevPoint[1] + point[1]) / 2
+            context.addQuadCurve(
+                to: makeCGPoint([midX, midY], scaleX, scaleY),
+                control: makeCGPoint(prevPoint, scaleX, scaleY)
+            )
+            prevPoint = point
+        }
+        prevPoint = coordinates.last!
+        context.addLine(to: makeCGPoint(prevPoint, scaleX, scaleY))
+    }
+
+    private func renderAnnotation(_ context: CGContext, scaleX: CGFloat, scaleY: CGFloat) {
+        guard page.intValue < annotationData.count else {
+            return
+        }
+        let annotationPage = annotationData[page.intValue]
+        context.setLineCap(.round)
+        context.setLineJoin(.round)
+        for stroke in annotationPage.strokes {
+            guard stroke.path.count > 1 else {
+                continue
+            }
+            context.setStrokeColor(parseColor(stroke.color).cgColor)
+            context.setLineWidth(stroke.width)
+
+            context.beginPath()
+            computePath(context, stroke.path, scaleX: scaleX, scaleY: scaleY)
+            context.strokePath()
+        }
+
+        for msg in annotationPage.text {
+            let scaledFont = 9 + (msg.fontSize * scaleX) / 1000
+            msg.str.draw(
+                at: makeCGPoint(msg.point, scaleX, scaleY),
+                withAttributes: [
+                    .font: UIFont.systemFont(ofSize: scaledFont),
+                    .foregroundColor: parseColor(msg.color)
+                ]
+            )
+        }
     }
 
     private func renderPdf() {
@@ -96,9 +183,14 @@ class PdfView: UIView {
             context.interpolationQuality = .high
             context.setRenderingIntent(.defaultIntent)
             context.drawPDFPage(pdfPage)
+            context.restoreGState()
+
+            context.saveGState()
+            self.renderAnnotation(context, scaleX: currentFrame.width, scaleY: currentFrame.height)
+            context.restoreGState()
+
             let rendered = UIGraphicsGetImageFromCurrentImageContext()
 
-            context.restoreGState()
             UIGraphicsEndImageContext()
 
             DispatchQueue.main.async {
