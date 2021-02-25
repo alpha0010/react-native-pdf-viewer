@@ -16,6 +16,10 @@ Unlike many native components in the wild, `react-native-pdf-light` provides
 full implementation of React Native shadow nodes. This simplifies UI
 development, since the component actually knows its own dimensions.
 
+Version 2.x, adds render support for annotations conforming the
+[PAS standard v1](https://github.com/alpha0010/paged-annotation). If
+annotation support is not needed, use 1.x for slightly reduced size.
+
 ## Installation
 
 ```sh
@@ -45,6 +49,8 @@ import { PdfView } from 'react-native-pdf-light/PdfView';
 #### `<Pdf ... />` Display a pdf.
 
 Props:
+- `annotation: string`
+  - Optional: Path to annotation data. File assumed to be [PAS v1](https://github.com/alpha0010/paged-annotation#version-1).
 - `onError: (error: Error) => void`
   - Optional: Callback to handle errors.
 - `onLoadComplete: (numberOfPages: number) => void`
@@ -79,6 +85,8 @@ Methods:
 #### `<PdfView ... />` Single page of a pdf.
 
 Props:
+- `annotation: string`
+  - Optional: Path to annotation data. File assumed to be [PAS v1](https://github.com/alpha0010/paged-annotation#version-1).
 - `page: number`
   - Page (0-indexed) of document to display.
 - `resizeMode: 'contain' | 'fitWidth'`
