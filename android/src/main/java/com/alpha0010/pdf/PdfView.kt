@@ -100,6 +100,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
 
   private fun computePath(coordinates: List<List<Float>>, scaleX: Int, scaleY: Int): Path {
     return Path().apply {
+      // Start path at the first point.
       var prevPoint = coordinates.first()
       moveTo(prevPoint[0] * scaleX, prevPoint[1] * scaleY)
       for (point in coordinates.drop(1)) {
@@ -109,12 +110,15 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
         }
         val midX = (prevPoint[0] + point[0]) / 2
         val midY = (prevPoint[1] + point[1]) / 2
+        // Draw line to the midpoint between the next two points. Use the first
+        // point as curve control (line will bend toward it).
         quadTo(
           prevPoint[0] * scaleX, prevPoint[1] * scaleY,
           midX * scaleX, midY * scaleY
         )
         prevPoint = point
       }
+      // Draw line to the last point.
       prevPoint = coordinates.last()
       lineTo(prevPoint[0] * scaleX, prevPoint[1] * scaleY)
     }
@@ -122,11 +126,14 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
 
   private fun renderAnnotation(bitmap: Bitmap) {
     if (mAnnotation.size <= mPage) {
+      // No annotation data for current page.
       return
     }
     val metrics = resources.displayMetrics
     val ctx = Canvas(bitmap)
     val paint = Paint()
+
+    // Draw strokes.
     paint.isAntiAlias = true
     paint.style = Paint.Style.STROKE
     paint.strokeCap = Paint.Cap.ROUND
@@ -140,6 +147,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
       ctx.drawPath(computePath(stroke.path, bitmap.width, bitmap.height), paint)
     }
 
+    // Draw text.
     paint.reset()
     paint.isAntiAlias = true
     paint.textAlign = Paint.Align.LEFT
@@ -147,6 +155,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     val factor = TypedValue.applyDimension(COMPLEX_UNIT_DIP, 1000f, metrics)
     for (msg in mAnnotation[mPage].text) {
       paint.color = Color.parseColor(msg.color)
+      // Increase the font for larger views, but do so at a reduced rate.
       val scaledFont = 9 + (msg.fontSize * bitmap.width) / factor
       paint.textSize = TypedValue.applyDimension(COMPLEX_UNIT_DIP, scaledFont, metrics)
       paint.getTextBounds(msg.str, 0, msg.str.length, bounds)

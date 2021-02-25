@@ -56,6 +56,7 @@ class PdfView: UIView {
     }
 
     private func parseColor(_ hex: String) -> UIColor {
+        // Parse HTML hex color. Assumes leading `#`.
         guard let colorInt = UInt64(hex.dropFirst(), radix: 16) else {
             return UIColor.black
         }
@@ -76,6 +77,7 @@ class PdfView: UIView {
     }
 
     private func computePath(_ context: CGContext, _ coordinates: [[CGFloat]], scaleX: CGFloat, scaleY: CGFloat) {
+        // Start path at the first point.
         var prevPoint = coordinates[0]
         context.move(to: makeCGPoint(prevPoint, scaleX, scaleY))
         for point in coordinates.dropFirst() {
@@ -85,21 +87,27 @@ class PdfView: UIView {
             }
             let midX = (prevPoint[0] + point[0]) / 2
             let midY = (prevPoint[1] + point[1]) / 2
+            // Draw line to the midpoint between the next two points. Use the first
+            // point as curve control (line will bend toward it).
             context.addQuadCurve(
                 to: makeCGPoint([midX, midY], scaleX, scaleY),
                 control: makeCGPoint(prevPoint, scaleX, scaleY)
             )
             prevPoint = point
         }
+        // Draw line to the last point.
         prevPoint = coordinates.last!
         context.addLine(to: makeCGPoint(prevPoint, scaleX, scaleY))
     }
 
     private func renderAnnotation(_ context: CGContext, scaleX: CGFloat, scaleY: CGFloat) {
         guard page.intValue < annotationData.count else {
+            // No annotation data for current page.
             return
         }
         let annotationPage = annotationData[page.intValue]
+
+        // Draw strokes.
         context.setLineCap(.round)
         context.setLineJoin(.round)
         for stroke in annotationPage.strokes {
@@ -114,7 +122,9 @@ class PdfView: UIView {
             context.strokePath()
         }
 
+        // Draw text.
         for msg in annotationPage.text {
+            // Increase the font for larger views, but do so at a reduced rate.
             let scaledFont = 9 + (msg.fontSize * scaleX) / 1000
             msg.str.draw(
                 at: makeCGPoint(msg.point, scaleX, scaleY),
