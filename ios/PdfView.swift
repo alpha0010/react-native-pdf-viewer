@@ -24,6 +24,14 @@ class PdfView: UIView {
     }
 
     private func loadAnnotation() {
+        guard !annotation.isEmpty else {
+            if !annotationData.isEmpty {
+                annotationData.removeAll()
+                renderPdf()
+            }
+            return
+        }
+
         let decoder = JSONDecoder()
         do {
             let data = try Data(contentsOf: URL(fileURLWithPath: annotation))
