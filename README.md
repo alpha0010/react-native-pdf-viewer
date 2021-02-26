@@ -20,6 +20,8 @@ Version 2.x, adds render support for annotations conforming the
 [PAS standard v1](https://github.com/alpha0010/paged-annotation). If
 annotation support is not needed, use 1.x for slightly reduced size.
 
+<img src="docs/annotation.png" alt="PDF Annotation" height="400">
+
 ## Installation
 
 ```sh
