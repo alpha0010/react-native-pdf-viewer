@@ -57,14 +57,19 @@ class PdfView: UIView {
 
     private func parseColor(_ hex: String) -> UIColor {
         // Parse HTML hex color. Assumes leading `#`.
-        guard let colorInt = UInt64(hex.dropFirst(), radix: 16) else {
+        guard let colorInt = UInt64(hex.dropFirst().prefix(6), radix: 16) else {
             return UIColor.black
+        }
+        var alpha = CGFloat(1.0)
+        if hex.count == 9, let alphaInt = UInt64(hex.suffix(2), radix: 16) {
+            // Extract alpha channel.
+            alpha = CGFloat(alphaInt) / 255.0
         }
         return UIColor(
             red: CGFloat((colorInt & 0xFF0000) >> 16) / 255.0,
             green: CGFloat((colorInt & 0x00FF00) >> 8) / 255.0,
             blue: CGFloat(colorInt & 0x0000FF) / 255.0,
-            alpha: CGFloat(1.0)
+            alpha: alpha
         )
     }
 

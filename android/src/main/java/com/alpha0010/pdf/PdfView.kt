@@ -94,6 +94,19 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     }
   }
 
+  private fun parseColor(hex: String): Int {
+    var androidColor = hex
+    if (hex.length == 9) {
+      // Convert #RRGGBBAA to #AARRGGBB.
+      androidColor = "#" + hex.takeLast(2) + hex.drop(1).take(6)
+    }
+    return try {
+      Color.parseColor(androidColor)
+    } catch (e: Exception) {
+      Color.BLACK
+    }
+  }
+
   private fun computeDist(a: List<Float>, b: List<Float>, scaleX: Int, scaleY: Int): Float {
     return hypot(scaleX * (a[0] - b[0]), scaleY * (a[1] - b[1]))
   }
@@ -142,7 +155,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
       if (stroke.path.size < 2) {
         continue
       }
-      paint.color = Color.parseColor(stroke.color)
+      paint.color = parseColor(stroke.color)
       paint.strokeWidth = TypedValue.applyDimension(COMPLEX_UNIT_DIP, stroke.width, metrics)
       ctx.drawPath(computePath(stroke.path, bitmap.width, bitmap.height), paint)
     }
@@ -154,7 +167,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     val bounds = Rect()
     val factor = TypedValue.applyDimension(COMPLEX_UNIT_DIP, 1000f, metrics)
     for (msg in mAnnotation[mPage].text) {
-      paint.color = Color.parseColor(msg.color)
+      paint.color = parseColor(msg.color)
       // Increase the font for larger views, but do so at a reduced rate.
       val scaledFont = 9 + (msg.fontSize * bitmap.width) / factor
       paint.textSize = TypedValue.applyDimension(COMPLEX_UNIT_DIP, scaledFont, metrics)
