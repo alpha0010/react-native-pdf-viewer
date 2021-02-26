@@ -1,3 +1,11 @@
+# [2.0.0-2](https://github.com/alpha0010/react-native-pdf-viewer/compare/v2.0.0-1...v2.0.0-2) (2021-02-26)
+
+
+### Bug Fixes
+
+* handle RGBA annotation colors ([2d55004](https://github.com/alpha0010/react-native-pdf-viewer/commit/2d550041362c71d05d1fc617e0cfafcffbe7e14e))
+* **ios:** unable to clear annotation ([3c18bfe](https://github.com/alpha0010/react-native-pdf-viewer/commit/3c18bfea0750c3aa33a377211c739968fd38a8dc))
+
 # [2.0.0-1](https://github.com/alpha0010/react-native-pdf-viewer/compare/v2.0.0-0...v2.0.0-1) (2021-02-25)
 
 
