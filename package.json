@@ -12,6 +12,7 @@
     "lib",
     "android/build.gradle",
     "android/gradle.properties",
+    "android/proguard-rules.pro",
     "android/src",
     "ios",
     "cpp",

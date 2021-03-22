@@ -1,0 +1,1 @@
+-keep class com.alpha0010.pdf.**$$serializer { *; }
