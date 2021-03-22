@@ -1,6 +1,6 @@
 {
   "name": "react-native-pdf-light",
-  "version": "2.0.0-2",
+  "version": "2.0.0-3",
   "description": "Minimalist PDF viewer for React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",

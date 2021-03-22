@@ -1,3 +1,10 @@
+# [2.0.0-3](https://github.com/alpha0010/react-native-pdf-viewer/compare/v2.0.0-2...v2.0.0-3) (2021-03-22)
+
+
+### Bug Fixes
+
+* **android:** support ProGuard builds ([6168d06](https://github.com/alpha0010/react-native-pdf-viewer/commit/6168d06adeadc1e47bcb4b4d35377fb1a21cffa6))
+
 # [2.0.0-2](https://github.com/alpha0010/react-native-pdf-viewer/compare/v2.0.0-1...v2.0.0-2) (2021-02-26)
 
 
