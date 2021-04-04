@@ -30,7 +30,6 @@ public class MainApplication extends Application implements ReactApplication {
         // Packages that cannot be autolinked yet can be added manually here, for PdfViewerExample:
         // packages.add(new MyReactNativePackage());
         packages.add(new PdfViewPackage());
-
         return packages;
       }
 
