@@ -10,6 +10,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   RefreshControlProps,
+  ScrollViewProps,
   StyleSheet,
   View,
 } from 'react-native';
@@ -83,6 +84,13 @@ type BaseListProps = {
    * functionality for the ScrollView.
    */
   refreshControl?: React.ReactElement<RefreshControlProps>;
+
+  /**
+   * Render a custom scroll component, e.g. with a differently styled `RefreshControl`.
+   */
+  renderScrollComponent?: (
+    props: ScrollViewProps
+  ) => React.ReactElement<ScrollViewProps>;
 
   /**
    * This controls how often the scroll event will be fired while scrolling
@@ -318,6 +326,7 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
       onScrollBeginDrag={props.onScrollBeginDrag}
       onScrollEndDrag={props.onScrollEndDrag}
       refreshControl={props.refreshControl}
+      renderScrollComponent={props.renderScrollComponent}
       scrollEventThrottle={props.scrollEventThrottle}
       testID="pdfFlatList"
     />
