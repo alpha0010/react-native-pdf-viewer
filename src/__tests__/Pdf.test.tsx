@@ -48,7 +48,7 @@ test('pdf viewer load error', async () => {
   expect(onLoadComplete).not.toHaveBeenCalled();
 });
 
-async function getRenderedViewer() {
+async function getRenderedViewer(source: string) {
   MockPdfUtil.getPageSizes.mockImplementationOnce(() =>
     Promise.resolve([
       { height: 400, width: 300 },
@@ -58,14 +58,23 @@ async function getRenderedViewer() {
   const onLoadComplete = jest.fn();
   const loadCompletePromise = promisify(onLoadComplete);
   const result = render(
-    <Pdf onLoadComplete={onLoadComplete} source="test.pdf" />
+    <Pdf onLoadComplete={onLoadComplete} source={source} />
   );
   await act(async () => await loadCompletePromise);
   return result;
 }
 
 test('viewer renders pages', async () => {
-  const { getByTestId } = await getRenderedViewer();
+  const { getByTestId } = await getRenderedViewer('test.pdf');
+  const flatList = getByTestId('pdfFlatList');
+
+  const { toJSON } = render(flatList.props.renderItem({ index: 0 }));
+
+  expect(toJSON()).toMatchSnapshot();
+});
+
+test('viewer renders pages URI source', async () => {
+  const { getByTestId } = await getRenderedViewer('file:///path/to/test.pdf');
   const flatList = getByTestId('pdfFlatList');
 
   const { toJSON } = render(flatList.props.renderItem({ index: 0 }));
@@ -74,7 +83,7 @@ test('viewer renders pages', async () => {
 });
 
 test('viewer computes layout', async () => {
-  const { getByTestId } = await getRenderedViewer();
+  const { getByTestId } = await getRenderedViewer('test.pdf');
   const flatList = getByTestId('pdfFlatList');
   const pageDimsData = [
     { height: 400, width: 300 },

@@ -5,6 +5,7 @@ import {
   requireNativeComponent,
   ViewStyle,
 } from 'react-native';
+import { asPath } from './Util';
 
 export type ErrorEvent = { message: string };
 
@@ -104,13 +105,13 @@ export function PdfView(props: PdfViewProps) {
 
   return (
     <PdfViewNative
-      annotation={props.annotation}
+      annotation={asPath(props.annotation)}
       onLayout={onLayout}
       onPdfError={onPdfError}
       onPdfLoadComplete={onPdfLoadComplete}
       page={props.page}
       resizeMode={props.resizeMode}
-      source={props.source}
+      source={asPath(props.source)}
       style={props.style}
     />
   );

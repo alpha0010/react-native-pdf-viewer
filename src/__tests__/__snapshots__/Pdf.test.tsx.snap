@@ -68,3 +68,40 @@ exports[`viewer renders pages 1`] = `
   </View>
 </View>
 `;
+
+exports[`viewer renders pages URI source 1`] = `
+<View
+  style={
+    Array [
+      Object {
+        "alignItems": "center",
+      },
+      Object {
+        "maxHeight": undefined,
+      },
+    ]
+  }
+>
+  <View>
+    <RNPdfView
+      onPdfError={[Function]}
+      onPdfLoadComplete={[Function]}
+      page={0}
+      source="/path/to/test.pdf"
+      style={
+        Object {
+          "backgroundColor": "#fff",
+          "elevation": 4,
+          "shadowColor": "#000",
+          "shadowOffset": Object {
+            "height": 2,
+            "width": 0,
+          },
+          "shadowOpacity": 0.23,
+          "shadowRadius": 2.62,
+        }
+      }
+    />
+  </View>
+</View>
+`;
