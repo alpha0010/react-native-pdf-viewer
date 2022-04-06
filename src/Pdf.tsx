@@ -1,5 +1,6 @@
 import React, {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -7,6 +8,8 @@ import React, {
 } from 'react';
 import {
   FlatList,
+  LayoutChangeEvent,
+  ListRenderItemInfo,
   NativeScrollEvent,
   NativeSyntheticEvent,
   RefreshControlProps,
@@ -254,69 +257,89 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
     props.onMeasurePages
   );
 
+  const getItemLayout = useCallback(
+    (data: PageDim[] | null | undefined, index: number) => {
+      // Default height, so layout computation will always return non-zero.
+      // This case should never occur.
+      let itemHeight = 100;
+      let offset = (itemHeight + separatorSize) * index;
+      if (data == null) {
+        console.warn('Pdf list getItemLayout() not passed data.');
+      } else if (flatListLayout.height === 0 || flatListLayout.width === 0) {
+        console.warn(
+          'Pdf list getItemLayout() could not determine screen size.'
+        );
+      } else {
+        const bound = maxPageHeight ?? Number.MAX_VALUE;
+        let pageSize = data[index];
+        itemHeight = Math.min(
+          bound,
+          (flatListLayout.width * pageSize.height) / pageSize.width
+        );
+        // Add up the separators and heights of pages before the current page.
+        offset = 0;
+        for (let i = 0; i < index; ++i) {
+          pageSize = data[i];
+          offset +=
+            separatorSize +
+            Math.min(
+              bound,
+              (flatListLayout.width * pageSize.height) / pageSize.width
+            );
+        }
+      }
+      return {
+        length: itemHeight,
+        offset,
+        index,
+      };
+    },
+    [flatListLayout, maxPageHeight]
+  );
+
+  const onLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      // For sizing pages to fit width, including on device rotation.
+      const next = event.nativeEvent.layout;
+      setFlatListLayout((prev) => {
+        if (prev.height === next.height && prev.width === next.width) {
+          return prev;
+        }
+        return { height: next.height, width: next.width };
+      });
+    },
+    [setFlatListLayout]
+  );
+
+  const renderItem = useCallback(
+    ({ index }: ListRenderItemInfo<PageDim>) => (
+      <View style={[styles.pageAlign, { maxHeight: maxPageHeight }]}>
+        <View>
+          <PdfView
+            annotation={props.annotation}
+            page={index}
+            source={source}
+            style={styles.page}
+          />
+        </View>
+      </View>
+    ),
+    [maxPageHeight, props.annotation, source]
+  );
+
   return (
     <FlatList
-      data={flatListLayout.height === 0 ? [] : pageDims}
-      getItemLayout={(data, index) => {
-        // Default height, so layout computation will always return non-zero.
-        // This case should never occur.
-        let itemHeight = 100;
-        let offset = (itemHeight + separatorSize) * index;
-        if (data == null) {
-          console.warn('Pdf list getItemLayout() not passed data.');
-        } else if (flatListLayout.height === 0 || flatListLayout.width === 0) {
-          console.warn(
-            'Pdf list getItemLayout() could not determine screen size.'
-          );
-        } else {
-          const bound = maxPageHeight ?? Number.MAX_VALUE;
-          let pageSize = data[index];
-          itemHeight = Math.min(
-            bound,
-            (flatListLayout.width * pageSize.height) / pageSize.width
-          );
-          // Add up the separators and heights of pages before the current page.
-          offset = 0;
-          for (let i = 0; i < index; ++i) {
-            pageSize = data[i];
-            offset +=
-              separatorSize +
-              Math.min(
-                bound,
-                (flatListLayout.width * pageSize.height) / pageSize.width
-              );
-          }
-        }
-        return {
-          length: itemHeight,
-          offset,
-          index,
-        };
-      }}
+      data={
+        flatListLayout.height !== 0 || pageDims.length === 0 ? pageDims : []
+      }
+      getItemLayout={getItemLayout}
       initialNumToRender={1}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
-      keyExtractor={(_item, index) => index.toString()}
+      ItemSeparatorComponent={generateItemSeparator}
+      keyExtractor={stringifyIndex}
       maxToRenderPerBatch={2}
-      onLayout={(event) => {
-        // For sizing pages to fit width, including on device rotation.
-        setFlatListLayout({
-          height: event.nativeEvent.layout.height,
-          width: event.nativeEvent.layout.width,
-        });
-      }}
+      onLayout={onLayout}
       ref={listRef}
-      renderItem={({ index }) => (
-        <View style={[styles.pageAlign, { maxHeight: maxPageHeight }]}>
-          <View>
-            <PdfView
-              annotation={props.annotation}
-              page={index}
-              source={source}
-              style={styles.page}
-            />
-          </View>
-        </View>
-      )}
+      renderItem={renderItem}
       windowSize={5}
       initialScrollIndex={props.initialScrollIndex}
       ListEmptyComponent={props.ListEmptyComponent}
@@ -345,3 +368,11 @@ const styles = StyleSheet.create({
   pageAlign: { alignItems: 'center' },
   separator: { height: separatorSize },
 });
+
+function generateItemSeparator() {
+  return <View style={styles.separator} />;
+}
+
+function stringifyIndex(_item: unknown, index: number) {
+  return index.toString();
+}
