@@ -7,7 +7,9 @@ import com.facebook.react.uimanager.ViewManager
 import java.util.concurrent.locks.ReentrantLock
 
 class PdfViewPackage : ReactPackage {
-  private val pdfMutex = ReentrantLock()
+  companion object {
+    private val pdfMutex = ReentrantLock()
+  }
 
   override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
     return listOf<NativeModule>(PdfUtilModule(reactContext, pdfMutex))

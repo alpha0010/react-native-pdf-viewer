@@ -221,7 +221,15 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
 
         // Api requires bitmap have alpha channel; fill with white so rendered
         // bitmap is opaque.
-        val rendered = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val rendered = try {
+          Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        } catch (e: OutOfMemoryError) {
+          pdfPage.close()
+          renderer.close()
+          fd.close()
+          onError("Insufficient memory to render '$mSource' at ${width}x${height}.")
+          return@launch
+        }
         rendered.eraseColor(Color.WHITE)
 
         // Scale the pdf page up/down to match the requested render dimensions.
