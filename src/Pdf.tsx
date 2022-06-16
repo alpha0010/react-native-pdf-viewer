@@ -8,12 +8,11 @@ import React, {
 } from 'react';
 import {
   FlatList,
+  FlatListProps,
   LayoutChangeEvent,
   ListRenderItemInfo,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  RefreshControlProps,
-  ScrollViewProps,
   StyleSheet,
   View,
 } from 'react-native';
@@ -47,7 +46,7 @@ type BaseListProps = {
    * Rendered when the list is empty. Can be a React Component Class, a render
    * function, or a rendered element.
    */
-  ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
+  ListEmptyComponent?: FlatListProps<PageDim>['ListEmptyComponent'];
 
   /**
    * Called when the momentum scroll starts (scroll which occurs as the scroll
@@ -86,14 +85,12 @@ type BaseListProps = {
    * A RefreshControl component, used to provide pull-to-refresh
    * functionality for the ScrollView.
    */
-  refreshControl?: React.ReactElement<RefreshControlProps>;
+  refreshControl?: FlatListProps<PageDim>['refreshControl'];
 
   /**
    * Render a custom scroll component, e.g. with a differently styled `RefreshControl`.
    */
-  renderScrollComponent?: (
-    props: ScrollViewProps
-  ) => React.ReactElement<ScrollViewProps>;
+  renderScrollComponent?: FlatListProps<PageDim>['renderScrollComponent'];
 
   /**
    * This controls how often the scroll event will be fired while scrolling
