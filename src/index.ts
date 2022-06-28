@@ -1,3 +1,3 @@
-export * from './Pdf';
-export * from './PdfUtil';
-export * from './PdfView';
+export { PageMeasurement, Pdf, PdfRef } from './Pdf';
+export { PageDim, PdfUtil } from './PdfUtil';
+export { ErrorEvent, LoadCompleteEvent, PdfView, ResizeMode } from './PdfView';
