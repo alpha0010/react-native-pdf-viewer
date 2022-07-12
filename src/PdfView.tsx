@@ -15,6 +15,7 @@ export type ResizeMode = 'contain' | 'fitWidth';
 
 type PdfViewNativeProps = {
   annotation?: string;
+  annotationPath?: string;
   onLayout?: (event: LayoutChangeEvent) => void;
   onPdfError: (event: NativeSyntheticEvent<ErrorEvent>) => void;
   onPdfLoadComplete: (event: NativeSyntheticEvent<LoadCompleteEvent>) => void;
@@ -26,10 +27,14 @@ type PdfViewNativeProps = {
 
 type PdfViewProps = {
   /**
-   * Path to annotation data.
+   * PAS v1 annotation JSON string.
    */
   annotation?: string;
 
+  /**
+   * Path to annotation data.
+   */
+  annotationPath?: string;
   /**
    * Callback to handle errors.
    */
@@ -105,7 +110,8 @@ export function PdfView(props: PdfViewProps) {
 
   return (
     <PdfViewNative
-      annotation={asPath(props.annotation)}
+      annotation={props.annotation}
+      annotationPath={asPath(props.annotationPath)}
       onLayout={onLayout}
       onPdfError={onPdfError}
       onPdfLoadComplete={onPdfLoadComplete}

@@ -43,7 +43,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     mBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
   }
 
-  fun setAnnotation(source: String) {
+  fun setAnnotation(source: String, file: Boolean = false) {
     if (source.isEmpty()) {
       if (mAnnotation.isNotEmpty()) {
         mAnnotation = emptyList()
@@ -53,7 +53,11 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     }
 
     try {
-      mAnnotation = Json.decodeFromString(File(source).readText())
+      if (file) {
+        mAnnotation = Json.decodeFromString(File(source).readText())
+      } else {
+        mAnnotation = Json.decodeFromString(source);
+      }
       mDirty = true
     } catch (e: Exception) {
       onError("Failed to load annotation from '$source'. ${e.message}")
