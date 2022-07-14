@@ -24,7 +24,7 @@ type PdfViewNativeProps = {
   style?: ViewStyle;
 };
 
-type PdfViewProps = {
+export type PdfViewProps = {
   /**
    * Path to annotation data.
    */
