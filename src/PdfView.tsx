@@ -25,7 +25,7 @@ type PdfViewNativeProps = {
   style?: ViewStyle;
 };
 
-type PdfViewProps = {
+export type PdfViewProps = {
   /**
    * PAS v1 annotation JSON string.
    */

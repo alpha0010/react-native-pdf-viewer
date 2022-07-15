@@ -22,6 +22,7 @@ import java.io.FileNotFoundException
 import java.util.concurrent.locks.Lock
 import kotlin.concurrent.withLock
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.hypot
 
 enum class ResizeMode(val jsName: String) {
@@ -29,19 +30,20 @@ enum class ResizeMode(val jsName: String) {
   FIT_WIDTH("fitWidth")
 }
 
+// Canvas passed to onDraw() crashes if passed too large a bitmap. Divide
+// rendered bitmap into slices to draw in sequence.
+// Logic assumes PdfView is at least `SLICES` pixels tall.
+const val SLICES = 8
+
 @SuppressLint("ViewConstructor")
 class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
   private var mAnnotation = emptyList<AnnotationPage>()
-  private var mBitmap: Bitmap
+  private val mBitmaps = MutableList(SLICES) { Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888) }
   private var mDirty = false
   private var mPage = 0
   private var mResizeMode = ResizeMode.CONTAIN
   private var mSource = ""
-  private val mViewRect = Rect()
-
-  init {
-    mBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
-  }
+  private val mViewRects = List(SLICES) { Rect() }
 
   fun setAnnotation(source: String, file: Boolean = false) {
     if (source.isEmpty()) {
@@ -262,10 +264,24 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
 
       withContext(Dispatchers.Main) {
         // Post new bitmap for display.
-        mBitmap.recycle()
-        mBitmap = bitmap
+        val sliceHeight = floor(bitmap.height.toFloat() / SLICES).toInt()
+        if (sliceHeight < 1) {
+          return@withContext
+        }
+        for (i in mBitmaps.indices) {
+          mBitmaps[i].recycle()
+          val remainingHeight = bitmap.height - i * sliceHeight
+          if (remainingHeight < 2 * sliceHeight) {
+            // Last slice.
+            mBitmaps[i] =
+              Bitmap.createBitmap(bitmap, 0, i * sliceHeight, bitmap.width, remainingHeight)
+          } else {
+            mBitmaps[i] = Bitmap.createBitmap(bitmap, 0, i * sliceHeight, bitmap.width, sliceHeight)
+          }
+        }
         invalidate()
       }
+      // TODO: Is `bitmap.recycle()` safe here?
 
       onLoadComplete(pdfPageWidth, pdfPageHeight)
     }
@@ -306,13 +322,27 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
   }
 
   override fun onDraw(canvas: Canvas) {
-    if (!mViewRect.isEmpty) {
-      canvas.drawBitmap(mBitmap, null, mViewRect, null)
+    mBitmaps.zip(mViewRects) { bitmap, viewRect ->
+      if (!viewRect.isEmpty) {
+        canvas.drawBitmap(bitmap, null, viewRect, null)
+      }
     }
   }
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-    mViewRect.set(0, 0, w, h)
+    val sliceHeight = floor(h.toFloat() / SLICES).toInt()
+    if (sliceHeight < 1) {
+      return
+    }
+    for (i in mViewRects.indices) {
+      val remainingHeight = h - i * sliceHeight
+      if (remainingHeight < 2 * sliceHeight) {
+        // Last slice.
+        mViewRects[i].set(0, i * sliceHeight, w, i * sliceHeight + remainingHeight)
+      } else {
+        mViewRects[i].set(0, i * sliceHeight, w, (i + 1) * sliceHeight)
+      }
+    }
     mDirty = true
     renderPdf()
   }

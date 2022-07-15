@@ -41,11 +41,20 @@ PdfUtil.getPageCount(source).then(console.log);
 <Pdf source={source} />
 ```
 
-If creating your own custom viewer, import can be optimized to:
+If creating your own custom viewer to manage pages:
 ```js
-import { PdfView } from 'react-native-pdf-light/PdfView';
+import { PdfView } from 'react-native-pdf-light';
 
 <PdfView page={page} source={source} />
+```
+
+For zoom support, install `react-native-gesture-handler` and use deep import.
+Note that `react-native-gesture-handler` is only required to use zoom
+features; the other display options do not have any dependencies.
+```js
+import { ZoomPdfView } from 'react-native-pdf-light/Zoom';
+
+<ZoomPdfView page={page} source={source} />
 ```
 
 #### `<Pdf ... />` Display a pdf.
@@ -97,6 +106,22 @@ Props:
   - Document to display.
 - `style: ViewStyle`
   - Optional: View stylesheet.
+
+#### `<ZoomPdfView ... />` Pinch zoomable single page of a pdf.
+
+Zoom interactions compatible with `react-native-pager-view` in horizontal
+display mode.
+
+Props:
+- All props from `PdfView`
+- `onZoomIn: () => void`
+  - Optional: Callback when view starts to zoom.
+- `onZoomReset: () => void`
+  - Optional: Callback when view returns to non-zoomed state.
+- `maximumZoom: number`
+  - Optional: Maximum allowed zoom. Default 2.
+- `refreshControl: <RefreshControl />`
+  - Optional: A [`RefreshControl`](https://reactnative.dev/docs/refreshcontrol) component, used to provide pull-to-refresh functionality for the internal ScrollView.
 
 #### `PdfUtil` Utility functions.
 
