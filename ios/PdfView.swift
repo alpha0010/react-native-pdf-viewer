@@ -4,8 +4,8 @@ enum ResizeMode: String {
 }
 
 class PdfView: UIView {
-    @objc var annotation = "" { didSet { loadAnnotation() } }
-    @objc var annotationPath = "" { didSet { loadAnnotation(file: true) } }
+    @objc var annotationStr = "" { didSet { loadAnnotation() } }
+    @objc var annotation = "" { didSet { loadAnnotation(file: true) } }
     @objc var page: NSNumber = 0 { didSet { renderPdf() } }
     @objc var resizeMode = ResizeMode.CONTAIN.rawValue { didSet { validateResizeMode() } }
     @objc var source = "" { didSet { renderPdf() } }
@@ -25,7 +25,7 @@ class PdfView: UIView {
     }
 
     private func loadAnnotation(file: Bool = false) {
-        guard !annotation.isEmpty || !annotationPath.isEmpty else {
+        guard !annotation.isEmpty || !annotationStr.isEmpty else {
             if !annotationData.isEmpty {
                 annotationData.removeAll()
                 renderPdf()
@@ -37,10 +37,10 @@ class PdfView: UIView {
         do {
             var data:Data;
             if (file) {
-                data = try Data(contentsOf: URL(fileURLWithPath: annotationPath))
+                data = try Data(contentsOf: URL(fileURLWithPath: annotation))
             }
             else {
-                data = annotation.data(using: .utf8)!;
+                data = annotationStr.data(using: .utf8)!;
             }
             annotationData = try decoder.decode([AnnotationPage].self, from: data)
         } catch {

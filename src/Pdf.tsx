@@ -108,12 +108,12 @@ type PdfProps = BaseListProps & {
   /**
    * PAS v1 annotation JSON string.
    */
-  annotation?: string;
+  annotationStr?: string;
 
   /**
    * Path to annotation data.
    */
-  annotationPath?: string;
+  annotation?: string;
 
   /**
    * Callback to handle errors.
@@ -319,7 +319,7 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
         <View>
           <PdfView
             annotation={props.annotation}
-            annotationPath={props.annotationPath}
+            annotationStr={props.annotationStr}
             page={index}
             source={source}
             style={styles.page}
@@ -327,7 +327,7 @@ export const Pdf = forwardRef((props: PdfProps, ref: React.Ref<PdfRef>) => {
         </View>
       </View>
     ),
-    [maxPageHeight, props.annotation, props.annotationPath, source]
+    [maxPageHeight, props.annotation, props.annotationStr, source]
   );
 
   return (
