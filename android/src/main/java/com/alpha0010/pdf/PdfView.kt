@@ -45,7 +45,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
   private var mSource = ""
   private val mViewRects = List(SLICES) { Rect() }
 
-  fun setAnnotation(source: String, file: Boolean = false) {
+  fun setAnnotation(source: String, file: Boolean) {
     if (source.isEmpty()) {
       if (mAnnotation.isNotEmpty()) {
         mAnnotation = emptyList()
@@ -55,10 +55,10 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
     }
 
     try {
-      if (file) {
-        mAnnotation = Json.decodeFromString(File(source).readText())
+      mAnnotation = if (file) {
+        Json.decodeFromString(File(source).readText())
       } else {
-        mAnnotation = Json.decodeFromString(source);
+        Json.decodeFromString(source)
       }
       mDirty = true
     } catch (e: Exception) {

@@ -4,7 +4,7 @@ enum ResizeMode: String {
 }
 
 class PdfView: UIView {
-    @objc var annotationStr = "" { didSet { loadAnnotation() } }
+    @objc var annotationStr = "" { didSet { loadAnnotation(file: false) } }
     @objc var annotation = "" { didSet { loadAnnotation(file: true) } }
     @objc var page: NSNumber = 0 { didSet { renderPdf() } }
     @objc var resizeMode = ResizeMode.CONTAIN.rawValue { didSet { validateResizeMode() } }
@@ -24,7 +24,7 @@ class PdfView: UIView {
         super.layoutSubviews()
     }
 
-    private func loadAnnotation(file: Bool = false) {
+    private func loadAnnotation(file: Bool) {
         guard !annotation.isEmpty || !annotationStr.isEmpty else {
             if !annotationData.isEmpty {
                 annotationData.removeAll()
@@ -35,7 +35,7 @@ class PdfView: UIView {
 
         let decoder = JSONDecoder()
         do {
-            var data:Data;
+            let data: Data;
             if (file) {
                 data = try Data(contentsOf: URL(fileURLWithPath: annotation))
             }

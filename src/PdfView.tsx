@@ -35,6 +35,7 @@ export type PdfViewProps = {
    * Path to annotation data.
    */
   annotation?: string;
+
   /**
    * Callback to handle errors.
    */
