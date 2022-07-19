@@ -38,8 +38,17 @@ class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfV
     view.renderPdf()
   }
 
-  @ReactProp(name = "annotation")
+  /**
+   * Set annotation from a PAS v1 JSON string
+   */
+  @ReactProp(name = "annotationStr")
   fun setAnnotation(view: PdfView, source: String?) = view.setAnnotation(source ?: "")
+
+  /**
+   * Set annotation from file containing a PAS v1 JSON string
+   */
+  @ReactProp(name = "annotation")
+  fun setAnnotationWithPath(view: PdfView, source: String?) = view.setAnnotation(source ?: "", true)
 
   /**
    * Page (0-indexed) of document to display.
