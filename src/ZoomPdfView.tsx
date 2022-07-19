@@ -83,6 +83,27 @@ function getViewDims(pdfSize: PageDim, viewSize: PageDim) {
   return { viewWidth, viewHeight };
 }
 
+/**
+ * Bind an animated value for sync reads.
+ */
+function useSyncAnimatedXY() {
+  const varXY = useRef({
+    animated: new Animated.ValueXY({ x: 0, y: 0 }),
+    static: { x: 0, y: 0 },
+  }).current;
+  // Enable sync read of animated variable.
+  useEffect(() => {
+    const { animated } = varXY;
+    const handle = animated.addListener((value) => {
+      varXY.static = value;
+    });
+    return () => {
+      animated.removeListener(handle);
+    };
+  }, [varXY]);
+  return varXY;
+}
+
 function useZoomGesture(
   pdfSize: PageDim,
   viewSize: PageDim,
@@ -110,20 +131,7 @@ function useZoomGesture(
   const pinchScale = useRef(new Animated.Value(1)).current;
 
   // Current scroll position.
-  const contentOffset = useRef({
-    animated: new Animated.ValueXY({ x: 0, y: 0 }),
-    static: { x: 0, y: 0 },
-  }).current;
-  // Enable sync read of animated variable.
-  useEffect(() => {
-    const { animated } = contentOffset;
-    const handle = animated.addListener((value) => {
-      contentOffset.static = value;
-    });
-    return () => {
-      animated.removeListener(handle);
-    };
-  }, [contentOffset]);
+  const contentOffset = useSyncAnimatedXY();
 
   // Centering buffers.
   const bufferSize = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
@@ -140,6 +148,15 @@ function useZoomGesture(
 
     bufferSize.setValue({ x: width, y: height });
   }, [bufferSize, containerScale, pdfSize, viewSize]);
+
+  // Origin point of pinch gesture.
+  const focalPoint = useSyncAnimatedXY();
+  useEffect(() => {
+    focalPoint.animated.setValue({
+      x: viewSize.width / 2,
+      y: viewSize.height / 2,
+    });
+  }, [focalPoint, viewSize]);
 
   // Pixel interpolation scale. Input driver `pinchScale` is shaped to allow
   // some bounce past min/max thresholds.
@@ -159,6 +176,9 @@ function useZoomGesture(
   const gestureHandler = useMemo(() => {
     return Gesture.Pinch()
       .withRef(gestureRef)
+      .onStart((e) =>
+        focalPoint.animated.setValue({ x: e.focalX, y: e.focalY })
+      )
       .onUpdate((e) => pinchScale.setValue(e.scale))
       .onEnd((e) => {
         // Spring back to scale bounds, if gesture overshot.
@@ -211,12 +231,12 @@ function useZoomGesture(
             // Adjust scroll views to apply scaling in correct location.
             const targetX =
               (targetScale / prevScale) *
-                (contentOffset.static.x - prevBufferX + viewSize.width / 2) -
-              viewSize.width / 2;
+                (contentOffset.static.x - prevBufferX + focalPoint.static.x) -
+              focalPoint.static.x;
             const targetY =
               (targetScale / prevScale) *
-                (contentOffset.static.y + viewSize.height / 2) -
-              viewSize.height / 2;
+                (contentOffset.static.y + focalPoint.static.y) -
+              focalPoint.static.y;
 
             await sleepToNextFrame();
             hScrollRef.current?.scrollTo({
@@ -231,6 +251,7 @@ function useZoomGesture(
     bufferSize,
     containerScale,
     contentOffset,
+    focalPoint,
     hScrollRef,
     gestureRef,
     maxScale,
@@ -248,15 +269,15 @@ function useZoomGesture(
 
     const pdfViewWidth = Animated.multiply(containerScale.animated, viewWidth);
     const centerRatioX = Animated.divide(
-      pdfViewWidth,
       Animated.add(
         Animated.subtract(contentOffset.animated.x, bufferSize.x),
-        viewSize.width / 2
-      )
+        focalPoint.animated.x
+      ),
+      pdfViewWidth
     );
     const translateX = Animated.multiply(
       Animated.multiply(pdfViewWidth, Animated.subtract(scale, 1)),
-      Animated.subtract(0.5, Animated.divide(1, centerRatioX))
+      Animated.subtract(0.5, centerRatioX)
     );
 
     const pdfViewHeight = Animated.multiply(
@@ -264,12 +285,12 @@ function useZoomGesture(
       viewHeight
     );
     const centerRatioY = Animated.divide(
-      pdfViewHeight,
-      Animated.add(contentOffset.animated.y, viewSize.height / 2)
+      Animated.add(contentOffset.animated.y, focalPoint.animated.y),
+      pdfViewHeight
     );
     const translateY = Animated.multiply(
       Animated.multiply(pdfViewHeight, Animated.subtract(scale, 1)),
-      Animated.subtract(0.5, Animated.divide(1, centerRatioY))
+      Animated.subtract(0.5, centerRatioY)
     );
 
     // Allow height to be manged by native pdf component.
@@ -277,7 +298,15 @@ function useZoomGesture(
       transform: [{ translateX }, { translateY }, { scale }],
       width: pdfViewWidth,
     };
-  }, [bufferSize, contentOffset, containerScale, pdfSize, scale, viewSize]);
+  }, [
+    bufferSize,
+    contentOffset,
+    containerScale,
+    focalPoint,
+    pdfSize,
+    scale,
+    viewSize,
+  ]);
 
   return {
     bufferSize,
