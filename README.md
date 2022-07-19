@@ -62,6 +62,8 @@ import { ZoomPdfView } from 'react-native-pdf-light/Zoom';
 Props:
 - `annotation: string`
   - Optional: Path to annotation data. File assumed to be [PAS v1](https://github.com/alpha0010/paged-annotation#version-1).
+- `annotationStr: string`
+  - Optional: Stringified JSON of annotation data. Data assumed to be [PAS v1](https://github.com/alpha0010/paged-annotation#version-1).
 - `onError: (error: Error) => void`
   - Optional: Callback to handle errors.
 - `onLoadComplete: (numberOfPages: number) => void`
@@ -98,6 +100,8 @@ Methods:
 Props:
 - `annotation: string`
   - Optional: Path to annotation data. File assumed to be [PAS v1](https://github.com/alpha0010/paged-annotation#version-1).
+- `annotationStr: string`
+  - Optional: Stringified JSON of annotation data. Data assumed to be [PAS v1](https://github.com/alpha0010/paged-annotation#version-1).
 - `page: number`
   - Page (0-indexed) of document to display.
 - `resizeMode: 'contain' | 'fitWidth'`
