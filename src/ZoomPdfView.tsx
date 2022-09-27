@@ -28,6 +28,8 @@ const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
 type AnimatedStyle = React.ComponentProps<typeof Animated.View>['style'];
 type ScrollViewRef = React.RefObject<typeof ScrollView>;
 
+export type PdfComponent = (props: PdfViewProps) => JSX.Element;
+
 export type ZoomPdfViewProps = PdfViewProps & {
   /**
    * Callback when view starts to zoom.
@@ -49,6 +51,11 @@ export type ZoomPdfViewProps = PdfViewProps & {
    * functionality for the internal ScrollView.
    */
   refreshControl?: ScrollViewProps['refreshControl'];
+
+  /**
+   * Alternate component to render pdf page. Default is PdfView.
+   */
+  renderComponent?: PdfComponent;
 };
 
 /**
@@ -328,6 +335,7 @@ export function ZoomPdfView(props: ZoomPdfViewProps) {
     onZoomIn,
     onZoomReset,
     refreshControl,
+    renderComponent,
     ...pdfViewProps
   } = props;
 
@@ -336,6 +344,8 @@ export function ZoomPdfView(props: ZoomPdfViewProps) {
 
   const hScrollRef = useRef<typeof ScrollView>(null);
   const vScrollRef = useRef<typeof ScrollView>(null);
+
+  const RenderComponent = renderComponent ?? PdfView;
 
   const {
     bufferSize,
@@ -422,7 +432,7 @@ export function ZoomPdfView(props: ZoomPdfViewProps) {
             <View style={Styles.row}>
               <Animated.View style={{ width: bufferSize.x }} />
               <Animated.View style={zoomStyle}>
-                <PdfView
+                <RenderComponent
                   {...pdfViewProps}
                   onLoadComplete={localOnLoadComplete}
                 />
