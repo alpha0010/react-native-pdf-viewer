@@ -196,6 +196,7 @@ function useZoomGesture(
 
   const gestureHandler = useMemo(() => {
     return Gesture.Pinch()
+      .runOnJS(true)
       .withRef(gestureRef)
       .onStart((e) =>
         focalPoint.animated.setValue({ x: e.focalX, y: e.focalY })
