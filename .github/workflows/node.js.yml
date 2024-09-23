@@ -24,7 +24,7 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: 20
-    - run: yarn example && yarn install
+    - run: yarn && yarn example
       if: steps.cache-node.outputs.cache-hit != 'true'
     - run: yarn lint
     - run: yarn typescript
