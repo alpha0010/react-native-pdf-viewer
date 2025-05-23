@@ -2,69 +2,12 @@
 // Avoids creating a package dependency on the library.
 
 declare module 'react-native-gesture-handler' {
-  import type {
-    ScrollView as RNScrollView,
-    ScrollViewProps as RNScrollViewProps,
-  } from 'react-native';
-
-  type CommonGestureConfig = {
-    enabled?: boolean;
-    shouldCancelWhenOutside?: boolean;
-    hitSlop?: HitSlop;
-  };
-
-  type BaseGestureHandlerProps<
-    ExtraEventPayloadT extends Record<string, unknown> = Record<string, unknown>
-  > = CommonGestureConfig & {
-    id?: string;
-    waitFor?: React.Ref<unknown> | React.Ref<unknown>[];
-    simultaneousHandlers?: React.Ref<unknown> | React.Ref<unknown>[];
-    testID?: string;
-    cancelsTouchesInView?: boolean;
-    onBegan?: (event: HandlerStateChangeEvent) => void;
-    onFailed?: (event: HandlerStateChangeEvent) => void;
-    onCancelled?: (event: HandlerStateChangeEvent) => void;
-    onActivated?: (event: HandlerStateChangeEvent) => void;
-    onEnded?: (event: HandlerStateChangeEvent) => void;
-    onGestureEvent?: (event: GestureEvent<ExtraEventPayloadT>) => void;
-    onHandlerStateChange?: (
-      event: HandlerStateChangeEvent<ExtraEventPayloadT>
-    ) => void;
-    children?: React.ReactNode;
-  };
-
   type NativeViewGestureHandlerPayload = {
     /**
      * True if gesture was performed inside of containing view, false otherwise.
      */
     pointerInside: boolean;
   };
-
-  interface NativeViewGestureConfig {
-    /**
-     * Android only.
-     *
-     * Determines whether the handler should check for an existing touch event on
-     * instantiation.
-     */
-    shouldActivateOnStart?: boolean;
-    /**
-     * When `true`, cancels all other gesture handlers when this
-     * `NativeViewGestureHandler` receives an `ACTIVE` state event.
-     */
-    disallowInterruption?: boolean;
-  }
-
-  interface NativeViewGestureHandlerProps
-    extends BaseGestureHandlerProps<NativeViewGestureHandlerPayload>,
-      NativeViewGestureConfig {}
-
-  export declare const ScrollView: React.ForwardRefExoticComponent<
-    RNScrollViewProps &
-      NativeViewGestureHandlerProps &
-      React.RefAttributes<React.ComponentType<any>>
-  > &
-    RNScrollView;
 
   declare const State: {
     readonly UNDETERMINED: 0;
@@ -193,8 +136,11 @@ declare module 'react-native-gesture-handler' {
     ): this;
   }
 
+  declare class NativeGesture extends BaseGesture<NativeViewGestureHandlerPayload> {}
+
   export declare const Gesture: {
     Pinch: () => PinchGesture;
+    Native: () => NativeGesture;
   };
 
   interface GestureDetectorProps {

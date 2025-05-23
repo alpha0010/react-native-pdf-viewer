@@ -9,16 +9,12 @@ import {
   Animated,
   LayoutChangeEvent,
   Platform,
+  type ScrollView,
   ScrollViewProps,
   StyleSheet,
   View,
 } from 'react-native';
-import {
-  Gesture,
-  GestureDetector,
-  GestureType,
-  ScrollView,
-} from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
 import type { PageDim } from './PdfUtil';
 import {
@@ -28,10 +24,8 @@ import {
   ResizeMode,
 } from './PdfView';
 
-const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
-
 type AnimatedStyle = React.ComponentProps<typeof Animated.View>['style'];
-type ScrollViewRef = React.RefObject<typeof ScrollView>;
+type ScrollViewRef = React.RefObject<ScrollView>;
 
 export type PdfComponent = (props: PdfViewProps) => JSX.Element;
 
@@ -138,8 +132,6 @@ function useZoomGesture(
 
   const [isZoomed, setIsZoomed] = useState(false);
 
-  const gestureRef = useRef<GestureType>();
-
   // Resolution to render.
   const containerScale = useRef({
     animated: new Animated.Value(1),
@@ -197,23 +189,16 @@ function useZoomGesture(
   const gestureHandler = useMemo(() => {
     return Gesture.Pinch()
       .runOnJS(true)
-      .withRef(gestureRef)
       .onStart((e) =>
         focalPoint.animated.setValue({ x: e.focalX, y: e.focalY })
       )
       .onUpdate((e) => pinchScale.setValue(e.scale))
       .onEnd((e) => {
         // Spring back to scale bounds, if gesture overshot.
-        const targetScale = Math.max(
-          minScale,
-          Math.min(maxScale, e.scale * containerScale.static)
-        );
+        const rawScale = e.scale * containerScale.static;
+        const targetScale = Math.max(minScale, Math.min(maxScale, rawScale));
 
-        Animated.timing(pinchScale, {
-          duration: 200,
-          toValue: targetScale / containerScale.static,
-          useNativeDriver: false,
-        }).start(async () => {
+        const applyScale = async () => {
           const { viewWidth, viewHeight } = getViewDims(
             pdfSize,
             viewSize,
@@ -271,7 +256,17 @@ function useZoomGesture(
             });
             vScrollRef.current?.scrollTo({ y: targetY, animated: false });
           }
-        });
+        };
+
+        if (rawScale === targetScale) {
+          sleepToNextFrame().then(applyScale);
+        } else {
+          Animated.timing(pinchScale, {
+            duration: 200,
+            toValue: targetScale / containerScale.static,
+            useNativeDriver: false,
+          }).start(applyScale);
+        }
       });
   }, [
     bufferSize,
@@ -279,7 +274,6 @@ function useZoomGesture(
     contentOffset,
     focalPoint,
     hScrollRef,
-    gestureRef,
     maxScale,
     onZoomIn,
     onZoomReset,
@@ -344,7 +338,6 @@ function useZoomGesture(
     bufferSize,
     contentOffset,
     gestureHandler,
-    gestureRef,
     isZoomed,
     zoomStyle,
   };
@@ -368,28 +361,22 @@ export function ZoomPdfView(props: ZoomPdfViewProps) {
   const [pdfSize, setPdfSize] = useState({ width: -1, height: -1 });
   const [viewSize, setViewSize] = useState({ width: 1, height: 1 });
 
-  const hScrollRef = useRef<typeof ScrollView>(null);
-  const vScrollRef = useRef<typeof ScrollView>(null);
+  const hScrollRef = useRef<ScrollView>(null);
+  const vScrollRef = useRef<ScrollView>(null);
 
   const RenderComponent = renderComponent ?? PdfView;
 
-  const {
-    bufferSize,
-    contentOffset,
-    gestureHandler,
-    gestureRef,
-    isZoomed,
-    zoomStyle,
-  } = useZoomGesture(
-    pdfSize,
-    viewSize,
-    resizeMode,
-    maximumZoom ?? 2,
-    hScrollRef,
-    vScrollRef,
-    onZoomIn,
-    onZoomReset
-  );
+  const { bufferSize, contentOffset, gestureHandler, isZoomed, zoomStyle } =
+    useZoomGesture(
+      pdfSize,
+      viewSize,
+      resizeMode,
+      maximumZoom ?? 2,
+      hScrollRef,
+      vScrollRef,
+      onZoomIn,
+      onZoomReset
+    );
 
   // Combine `onLoadComplete` callback from props with logic required
   // by `ZoomPdfView`.
@@ -422,53 +409,71 @@ export function ZoomPdfView(props: ZoomPdfViewProps) {
   // pinch detection.
   // Horizontal `scrollEnabled` only when zoomed prevents conflict with
   // swipe between pages.
+  const hScrollGesture = useMemo(
+    () =>
+      Platform.OS === 'android'
+        ? Gesture.Native().requireExternalGestureToFail(gestureHandler)
+        : Gesture.Native(),
+    [gestureHandler]
+  );
+  const vScrollGesture = useMemo(
+    () =>
+      Platform.OS === 'android'
+        ? Gesture.Native().requireExternalGestureToFail(gestureHandler)
+        : Gesture.Native(),
+    [gestureHandler]
+  );
   return (
     <GestureDetector gesture={gestureHandler}>
       <View style={Styles.container} onLayout={onViewLayout}>
-        <AnimatedScrollView
-          horizontal={true}
-          onScroll={Animated.event(
-            [
-              {
-                nativeEvent: { contentOffset: { x: contentOffset.animated.x } },
-              },
-            ],
-            { useNativeDriver: false }
-          )}
-          ref={hScrollRef}
-          scrollEnabled={isZoomed}
-          scrollEventThrottle={50}
-          waitFor={Platform.select({ android: gestureRef })}
-        >
-          <AnimatedScrollView
+        <GestureDetector gesture={hScrollGesture}>
+          <Animated.ScrollView
+            horizontal={true}
             onScroll={Animated.event(
               [
                 {
                   nativeEvent: {
-                    contentOffset: { y: contentOffset.animated.y },
+                    contentOffset: { x: contentOffset.animated.x },
                   },
                 },
               ],
               { useNativeDriver: false }
             )}
-            ref={vScrollRef}
-            refreshControl={refreshControl}
+            ref={hScrollRef}
+            scrollEnabled={isZoomed}
             scrollEventThrottle={50}
-            waitFor={Platform.select({ android: gestureRef })}
           >
-            <View style={Styles.row}>
-              <Animated.View style={{ width: bufferSize.x }} />
-              <Animated.View style={zoomStyle}>
-                <RenderComponent
-                  {...pdfViewProps}
-                  onLoadComplete={localOnLoadComplete}
-                />
-              </Animated.View>
-              <Animated.View style={{ width: bufferSize.x }} />
-            </View>
-            <Animated.View style={{ height: bufferSize.y }} />
-          </AnimatedScrollView>
-        </AnimatedScrollView>
+            <GestureDetector gesture={vScrollGesture}>
+              <Animated.ScrollView
+                onScroll={Animated.event(
+                  [
+                    {
+                      nativeEvent: {
+                        contentOffset: { y: contentOffset.animated.y },
+                      },
+                    },
+                  ],
+                  { useNativeDriver: false }
+                )}
+                ref={vScrollRef}
+                refreshControl={refreshControl}
+                scrollEventThrottle={50}
+              >
+                <View style={Styles.row}>
+                  <Animated.View style={{ width: bufferSize.x }} />
+                  <Animated.View style={zoomStyle}>
+                    <RenderComponent
+                      {...pdfViewProps}
+                      onLoadComplete={localOnLoadComplete}
+                    />
+                  </Animated.View>
+                  <Animated.View style={{ width: bufferSize.x }} />
+                </View>
+                <Animated.View style={{ height: bufferSize.y }} />
+              </Animated.ScrollView>
+            </GestureDetector>
+          </Animated.ScrollView>
+        </GestureDetector>
       </View>
     </GestureDetector>
   );
