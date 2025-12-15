@@ -2,20 +2,32 @@ package com.alpha0010.pdf
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Matrix
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.Rect
+import android.graphics.RectF
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
+import android.util.LruCache
+import android.util.Size
 import android.util.TypedValue
 import android.util.TypedValue.COMPLEX_UNIT_DIP
 import android.view.View
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.toColorInt
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
-import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.facebook.react.uimanager.StateWrapper
+import com.facebook.react.uimanager.UIManagerHelper
+import com.facebook.react.uimanager.events.Event
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.io.FileNotFoundException
@@ -36,14 +48,85 @@ enum class ResizeMode(val jsName: String) {
 const val SLICES = 8
 
 @SuppressLint("ViewConstructor")
-class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
+class PdfView(
+  context: Context,
+  private val measureCache: LruCache<String, Size>,
+  private val pdfMutex: Lock
+) : View(context) {
   private var mAnnotation = emptyList<AnnotationPage>()
-  private val mBitmaps = MutableList(SLICES) { Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888) }
+  private val mBitmaps = MutableList(SLICES) { createBitmap(1, 1) }
   private var mDirty = false
   private var mPage = 0
+  private var mPageMeasure = Size(1, 1)
   private var mResizeMode = ResizeMode.CONTAIN
   private var mSource = ""
+  private var mStateWrapper: StateWrapper? = null
   private val mViewRects = List(SLICES) { Rect() }
+
+  fun setStateWrapper(stateWrapper: StateWrapper?) {
+    mStateWrapper = stateWrapper
+    measurePdf()
+  }
+
+  /**
+   * Push sizing info to the shadow node.
+   */
+  private fun measurePdf() {
+    if (mStateWrapper == null) {
+      return
+    }
+    // Attempt to get page dimensions from cache, to avoid disk I/O.
+    val cacheKey = "$mPage-$mSource"
+    val cachedSize = measureCache[cacheKey]
+    if (cachedSize != null) {
+      if (cachedSize != mPageMeasure) {
+        mPageMeasure = cachedSize
+        mStateWrapper?.updateState(Arguments.createMap().apply {
+          putInt("width", mPageMeasure.width)
+          putInt("height", mPageMeasure.height)
+        })
+      }
+      return
+    }
+
+    // It appears that this cannot be pushed to a background thread due to
+    // the call to `dirty()`.
+    val file = File(mSource)
+    val fd = try {
+      ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+    } catch (e: FileNotFoundException) {
+      return
+    }
+    val pageSize = pdfMutex.withLock {
+      val renderer = try {
+        PdfRenderer(fd)
+      } catch (e: Exception) {
+        fd.close()
+        return
+      }
+      val page = try {
+        renderer.openPage(mPage)
+      } catch (e: Exception) {
+        renderer.close()
+        fd.close()
+        return
+      }
+      val res = Size(page.width, page.height)
+      page.close()
+      renderer.close()
+      return@withLock res
+    }
+    fd.close()
+
+    measureCache.put(cacheKey, pageSize)
+    if (pageSize != mPageMeasure) {
+      mPageMeasure = pageSize
+      mStateWrapper?.updateState(Arguments.createMap().apply {
+        putInt("width", mPageMeasure.width)
+        putInt("height", mPageMeasure.height)
+      })
+    }
+  }
 
   fun setAnnotation(source: String, file: Boolean) {
     if (source.isEmpty()) {
@@ -69,6 +152,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
   fun setPage(page: Int) {
     mPage = page
     mDirty = true
+    measurePdf()
   }
 
   fun setResizeMode(mode: String) {
@@ -88,6 +172,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
   fun setSource(source: String) {
     mSource = source
     mDirty = true
+    measurePdf()
   }
 
   private fun computeDestRect(srcWidth: Int, srcHeight: Int): RectF {
@@ -107,7 +192,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
       androidColor = "#" + hex.takeLast(2) + hex.drop(1).take(6)
     }
     return try {
-      Color.parseColor(androidColor)
+      androidColor.toColorInt()
     } catch (e: Exception) {
       Color.BLACK
     }
@@ -228,7 +313,7 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
         // Api requires bitmap have alpha channel; fill with white so rendered
         // bitmap is opaque.
         val rendered = try {
-          Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+          createBitmap(width, height)
         } catch (e: OutOfMemoryError) {
           pdfPage.close()
           renderer.close()
@@ -303,22 +388,35 @@ class PdfView(context: Context, private val pdfMutex: Lock) : View(context) {
   }
 
   private fun onError(message: String) {
-    val event = Arguments.createMap()
-    event.putString("message", message)
     val reactContext = context as ReactContext
-    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
-      id, "onPdfError", event
+    UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)?.dispatchEvent(
+      OnErrorEvent(UIManagerHelper.getSurfaceId(reactContext), id, message)
     )
   }
 
+  inner class OnErrorEvent(surfaceId: Int, viewId: Int, message: String) :
+    Event<OnErrorEvent>(surfaceId, viewId) {
+    private val payload = Arguments.createMap().apply { putString("message", message) }
+    override fun getEventName() = "onPdfError"
+    override fun getEventData() = payload
+  }
+
   private fun onLoadComplete(pageWidth: Int, pageHeight: Int) {
-    val event = Arguments.createMap()
-    event.putInt("width", pageWidth)
-    event.putInt("height", pageHeight)
     val reactContext = context as ReactContext
-    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
-      id, "onPdfLoadComplete", event
+    UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)?.dispatchEvent(
+      OnLoadCompleteEvent(UIManagerHelper.getSurfaceId(reactContext), id, pageWidth, pageHeight)
     )
+  }
+
+  inner class OnLoadCompleteEvent(surfaceId: Int, viewId: Int, width: Int, height: Int) :
+    Event<OnLoadCompleteEvent>(surfaceId, viewId) {
+    private val payload = Arguments.createMap().apply {
+      putInt("width", width)
+      putInt("height", height)
+    }
+
+    override fun getEventName() = "onPdfLoadComplete"
+    override fun getEventData() = payload
   }
 
   override fun onDraw(canvas: Canvas) {

@@ -2,23 +2,29 @@ package com.alpha0010.pdf
 
 import android.util.LruCache
 import android.util.Size
-import com.facebook.react.uimanager.BaseViewManager
+import com.facebook.react.module.annotations.ReactModule
+import com.facebook.react.uimanager.ReactStylesDiffMap
+import com.facebook.react.uimanager.SimpleViewManager
+import com.facebook.react.uimanager.StateWrapper
 import com.facebook.react.uimanager.ThemedReactContext
+import com.facebook.react.uimanager.ViewManagerDelegate
 import com.facebook.react.uimanager.annotations.ReactProp
+import com.facebook.react.viewmanagers.PdfViewManagerDelegate
+import com.facebook.react.viewmanagers.PdfViewManagerInterface
 import java.util.concurrent.locks.Lock
 
-class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfViewShadowNode>() {
+@ReactModule(name = PdfViewManager.NAME)
+class PdfViewManager(private val pdfMutex: Lock) : SimpleViewManager<PdfView>(),
+  PdfViewManagerInterface<PdfView> {
+  private val mDelegate: ViewManagerDelegate<PdfView> = PdfViewManagerDelegate(this)
   private val mMeasureCache = LruCache<String, Size>(128)
 
-  override fun getName() = "RNPdfView"
+  override fun getDelegate() = mDelegate
 
-  override fun createViewInstance(reactContext: ThemedReactContext): PdfView {
-    return PdfView(reactContext, pdfMutex)
-  }
+  override fun getName() = NAME
 
-  override fun createShadowNodeInstance() = PdfViewShadowNode(mMeasureCache, pdfMutex)
-
-  override fun getShadowNodeClass() = PdfViewShadowNode::class.java
+  public override fun createViewInstance(context: ThemedReactContext) =
+    PdfView(context, mMeasureCache, pdfMutex)
 
   override fun getExportedCustomBubblingEventTypeConstants(): MutableMap<String, Any> {
     return mutableMapOf(
@@ -31,32 +37,39 @@ class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfV
     )
   }
 
-  override fun updateExtraData(root: PdfView, extraData: Any?) {}
-
   override fun onAfterUpdateTransaction(view: PdfView) {
     super.onAfterUpdateTransaction(view)
     view.renderPdf()
   }
 
-  /**
-   * Set annotation from a PAS v1 JSON string
-   */
-  @ReactProp(name = "annotationStr")
-  fun setAnnotationStr(view: PdfView, source: String?) =
-    view.setAnnotation(source ?: "", file = false)
+  override fun updateState(
+    view: PdfView,
+    props: ReactStylesDiffMap?,
+    stateWrapper: StateWrapper?
+  ): Any? {
+    view.setStateWrapper(stateWrapper)
+    return super.updateState(view, props, stateWrapper)
+  }
 
   /**
    * Set annotation from file containing a PAS v1 JSON string
    */
   @ReactProp(name = "annotation")
-  fun setAnnotation(view: PdfView, source: String?) =
+  override fun setAnnotation(view: PdfView, source: String?) =
     view.setAnnotation(source ?: "", file = true)
+
+  /**
+   * Set annotation from a PAS v1 JSON string
+   */
+  @ReactProp(name = "annotationStr")
+  override fun setAnnotationStr(view: PdfView, source: String?) =
+    view.setAnnotation(source ?: "", file = false)
 
   /**
    * Page (0-indexed) of document to display.
    */
-  @ReactProp(name = "page", defaultInt = 0)
-  fun setPage(view: PdfView, page: Int) = view.setPage(page)
+  @ReactProp(name = "page")
+  override fun setPage(view: PdfView, page: Int) = view.setPage(page)
 
   /**
    * How pdf page should be scaled to fit in view dimensions.
@@ -69,13 +82,16 @@ class PdfViewManager(private val pdfMutex: Lock) : BaseViewManager<PdfView, PdfV
    *     the bottom.
    */
   @ReactProp(name = "resizeMode")
-  fun setResizeMode(view: PdfView, mode: String?) {
+  override fun setResizeMode(view: PdfView, mode: String?) =
     view.setResizeMode(mode ?: ResizeMode.CONTAIN.jsName)
-  }
 
   /**
    * Document to display.
    */
   @ReactProp(name = "source")
-  fun setSource(view: PdfView, source: String?) = view.setSource(source ?: "")
+  override fun setSource(view: PdfView, source: String?) = view.setSource(source ?: "")
+
+  companion object {
+    const val NAME = "PdfView"
+  }
 }
