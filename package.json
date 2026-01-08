@@ -120,8 +120,8 @@
       "javaPackageName": "com.alpha0010.pdf"
     },
     "ios": {
-      "componentProvider": {
-        "PdfView": "PdfView"
+      "modulesProvider": {
+        "NativePdfUtil": "PdfUtilModule"
       }
     }
   },

@@ -13,6 +13,7 @@ private:
 
 public:
   PdfViewState();
+  PdfViewState(int _width, int _height);
 #ifdef RN_SERIALIZABLE_STATE
   PdfViewState(const PdfViewState& previousState, folly::dynamic data);
   folly::dynamic getDynamic() const;

@@ -4,6 +4,8 @@ namespace facebook::react {
 
 PdfViewState::PdfViewState() : width(1), height(1) {}
 
+PdfViewState::PdfViewState(int _width, int _height) : width(_width), height(_height) {}
+
 #ifdef RN_SERIALIZABLE_STATE
 PdfViewState::PdfViewState(const PdfViewState& previousState, folly::dynamic data)
   : width(data["width"].getInt()), height(data["height"].getInt()) {}
