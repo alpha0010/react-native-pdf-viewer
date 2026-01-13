@@ -6,11 +6,6 @@
 
 namespace facebook::react {
 
-class PdfViewComponentDescriptor final
-  : public ConcreteComponentDescriptor<PdfViewShadowNode> {
-public:
-  using ConcreteComponentDescriptor::ConcreteComponentDescriptor;
-  void adopt(ShadowNode& shadowNode) const override;
-};
+using PdfViewComponentDescriptor = ConcreteComponentDescriptor<PdfViewShadowNode>;
 
 } // namespace facebook::react

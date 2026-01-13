@@ -6,6 +6,14 @@ namespace facebook::react {
 
 extern const char PdfViewComponentName[] = "PdfView";
 
+ShadowNodeTraits PdfViewShadowNode::BaseTraits()
+{
+  auto traits = ConcreteViewShadowNode::BaseTraits();
+  traits.set(ShadowNodeTraits::Trait::LeafYogaNode);
+  traits.set(ShadowNodeTraits::Trait::MeasurableYogaNode);
+  return traits;
+}
+
 Size PdfViewShadowNode::measureContent(
   const LayoutContext& layoutContext,
   const LayoutConstraints& layoutConstraints) const {

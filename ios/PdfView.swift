@@ -4,17 +4,18 @@
 
 @objc(PdfViewImpl)
 public class PdfView: UIView {
-    // TODO: Batch render calls.
-    @objc public var annotationStr = "" { didSet { loadAnnotation(file: false) } }
-    @objc public var annotation = "" { didSet { loadAnnotation(file: true) } }
-    @objc public var page = 0 { didSet { renderPdf() } }
-    @objc public var resizeMode = ResizeMode.CONTAIN { didSet { renderPdf() } }
-    @objc public var source = "" { didSet { renderPdf() } }
+    private var annotation = "" { didSet { loadAnnotation(file: true) } }
+    private var annotationStr = "" { didSet { loadAnnotation(file: false) } }
+    private var page = 0
+    private var resizeMode = ResizeMode.CONTAIN
+    private var source = ""
+
+    @objc public var readyToRender = false
 
     public typealias PdfErrorHandler = (String) -> Void
     @objc public var onPdfError: PdfErrorHandler?
 
-    public typealias PdfPageSizeHandler = (CGFloat, CGFloat) -> Void
+    public typealias PdfPageSizeHandler = (Int, Int) -> Void
     @objc public var onPdfLoadComplete: PdfPageSizeHandler?
     @objc public var onPdfMeasure: PdfPageSizeHandler?
 
@@ -34,10 +35,48 @@ public class PdfView: UIView {
         }
         // Apply crop and rotation to dimensions.
         let pageBounds = pdfPage.getBoxRect(.cropBox)
+        let nextWidth: Int
+        let nextHeight: Int
         if pdfPage.rotationAngle % 180 == 90 {
-            dispatcher(pageBounds.height, pageBounds.width)
+            nextWidth = Int(pageBounds.height.rounded())
+            nextHeight = Int(pageBounds.width.rounded())
         } else {
-            dispatcher(pageBounds.width, pageBounds.height)
+            nextWidth = Int(pageBounds.width.rounded())
+            nextHeight = Int(pageBounds.height.rounded())
+        }
+        dispatcher(nextWidth, nextHeight)
+    }
+
+    @objc public func updateProps(annot: String, annotStr: String, pg: Int, rsMd: ResizeMode, src: String) {
+        var isDirty = false
+        var needsMeasure = false
+        if annotation != annot {
+            annotation = annot
+            isDirty = true
+        }
+        if annotationStr != annotStr {
+            annotationStr = annotStr
+            isDirty = true
+        }
+        if page != pg {
+            page = pg
+            isDirty = true
+            needsMeasure = true
+        }
+        if resizeMode != rsMd {
+            resizeMode = rsMd
+            isDirty = true
+        }
+        if source != src {
+            source = src
+            isDirty = true
+            needsMeasure = true
+        }
+        if needsMeasure {
+            measurePdf()
+        }
+        if isDirty {
+            renderPdf()
         }
     }
 
@@ -53,7 +92,6 @@ public class PdfView: UIView {
         guard !annotation.isEmpty || !annotationStr.isEmpty else {
             if !annotationData.isEmpty {
                 annotationData.removeAll()
-                renderPdf()
             }
             return
         }
@@ -63,8 +101,7 @@ public class PdfView: UIView {
             let data: Data;
             if (file) {
                 data = try Data(contentsOf: URL(fileURLWithPath: annotation))
-            }
-            else {
+            } else {
                 data = annotationStr.data(using: .utf8)!;
             }
             annotationData = try decoder.decode([AnnotationPage].self, from: data)
@@ -74,7 +111,6 @@ public class PdfView: UIView {
             )
             return
         }
-        renderPdf()
     }
 
     private func parseColor(_ hex: String) -> UIColor {
@@ -164,7 +200,7 @@ public class PdfView: UIView {
     }
 
     private func renderPdf() {
-        guard !frame.isEmpty && !source.isEmpty else {
+        guard !frame.isEmpty && !source.isEmpty && readyToRender else {
             // View layout not yet complete, or nothing to render.
             return
         }
@@ -257,6 +293,6 @@ public class PdfView: UIView {
         guard let dispatcher = onPdfLoadComplete else {
             return
         }
-        dispatcher(pageWidth, pageHeight)
+        dispatcher(Int(pageWidth.rounded()), Int(pageHeight.rounded()))
     }
 }

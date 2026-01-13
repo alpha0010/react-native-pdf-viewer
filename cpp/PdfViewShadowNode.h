@@ -23,6 +23,8 @@ class PdfViewShadowNode final
 public:
   using ConcreteViewShadowNode::ConcreteViewShadowNode;
 
+  static ShadowNodeTraits BaseTraits();
+
   Size measureContent(
     const LayoutContext& layoutContext,
     const LayoutConstraints& layoutConstraints) const override;

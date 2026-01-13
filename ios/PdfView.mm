@@ -40,19 +40,21 @@ using namespace facebook::react;
                     .onPdfError({[message UTF8String]});
             }
         };
-        _view.onPdfLoadComplete = ^(CGFloat width, CGFloat height) {
+        _view.onPdfLoadComplete = ^(NSInteger width, NSInteger height) {
             PdfView *strongSelf = weakSelf;
             if (strongSelf) {
                 PdfViewEventEmitter::OnPdfLoadComplete evt;
-                evt.width = width;
-                evt.height = height;
+                evt.width = static_cast<int>(width);
+                evt.height = static_cast<int>(height);
                 static_cast<const PdfViewEventEmitter &>(*strongSelf->_eventEmitter)
                     .onPdfLoadComplete(evt);
             }
         };
-        _view.onPdfMeasure = ^(CGFloat width, CGFloat height) {
+        _view.onPdfMeasure = ^(NSInteger width, NSInteger height) {
             PdfView *strongSelf = weakSelf;
-            if (strongSelf && strongSelf->_state) {
+            if (strongSelf && strongSelf->_state && (
+                strongSelf->_state->getData().getPageWidth() != width
+                || strongSelf->_state->getData().getPageHeight() != height)) {
                 strongSelf->_state->updateState({static_cast<int>(width), static_cast<int>(height)});
             }
         };
@@ -65,44 +67,20 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
-    const auto &oldViewProps = *std::static_pointer_cast<PdfViewProps const>(_props);
     const auto &newViewProps = *std::static_pointer_cast<PdfViewProps const>(props);
 
-    bool needsMeasure = false;
-    if (oldViewProps.annotation != newViewProps.annotation) {
-        _view.annotation = [NSString stringWithUTF8String:newViewProps.annotation.c_str()];
-    }
-    if (oldViewProps.annotationStr != newViewProps.annotationStr) {
-        _view.annotationStr = [NSString stringWithUTF8String:newViewProps.annotationStr.c_str()];
-    }
-    if (oldViewProps.page != newViewProps.page) {
-        _view.page = newViewProps.page;
-        needsMeasure = true;
-    }
-    if (oldViewProps.resizeMode != newViewProps.resizeMode) {
-        switch (newViewProps.resizeMode) {
-            case PdfViewResizeMode::Contain:
-                _view.resizeMode = ResizeModeCONTAIN;
-                break;
-            case facebook::react::PdfViewResizeMode::FitWidth:
-                _view.resizeMode = ResizeModeFIT_WIDTH;
-                break;
-        }
-    }
-    if (oldViewProps.source != newViewProps.source) {
-        _view.source = [NSString stringWithUTF8String:newViewProps.source.c_str()];
-        needsMeasure = true;
-    }
-
-    if (needsMeasure && _state) {
-        [_view measurePdf];
-    }
+    [_view updatePropsWithAnnot:[NSString stringWithUTF8String:newViewProps.annotation.c_str()]
+                       annotStr:[NSString stringWithUTF8String:newViewProps.annotationStr.c_str()]
+                             pg:newViewProps.page
+                           rsMd:newViewProps.resizeMode == facebook::react::PdfViewResizeMode::FitWidth ? ResizeModeFIT_WIDTH : ResizeModeCONTAIN
+                            src:[NSString stringWithUTF8String:newViewProps.source.c_str()]];
 
     [super updateProps:props oldProps:oldProps];
 }
 
 - (void)updateState:(const facebook::react::State::Shared &)state oldState:(const facebook::react::State::Shared &)oldState
 {
+    _view.readyToRender = oldState != nullptr; // Skip render until measurements sent to shadow node.
     _state = std::static_pointer_cast<const PdfViewShadowNode::ConcreteState>(state);
     [_view measurePdf];
     [super updateState:state oldState:oldState];
