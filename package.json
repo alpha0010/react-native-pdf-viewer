@@ -10,6 +10,11 @@
       "types": "./lib/typescript/src/index.d.ts",
       "default": "./lib/module/index.js"
     },
+    "./Zoom": {
+      "source": "./src/ZoomPdfView.tsx",
+      "types": "./lib/typescript/src/ZoomPdfView.d.ts",
+      "default": "./lib/module/ZoomPdfView.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -18,7 +23,6 @@
     "android",
     "ios",
     "cpp",
-    "Zoom",
     "*.podspec",
     "react-native.config.js",
     "!ios/build",
