@@ -31,6 +31,13 @@ npm install react-native-pdf-light
 If iOS build fails with `Undefined symbol: __swift_FORCE_LOAD_...`, add an
 empty `.swift` file to the xcode project.
 
+### Compatibility
+
+| React Native | react-native-pdf-light |
+| ------------ | ---------------------- |
+| old arch     | 1.x.x, 2.x.x           |
+| new arch     | 3.x.x                  |
+
 ## Usage
 
 ```js
