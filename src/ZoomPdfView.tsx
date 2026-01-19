@@ -1,31 +1,18 @@
-import React, {
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
-  useMemo,
-} from 'react';
-import {
-  Animated,
-  LayoutChangeEvent,
-  Platform,
-  type ScrollView,
-  ScrollViewProps,
-  StyleSheet,
-  View,
-} from 'react-native';
+import type { JSX } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import type { LayoutChangeEvent, ScrollViewProps } from 'react-native';
+import { Animated, Platform, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 
-import type { PageDim } from './PdfUtil';
-import {
-  LoadCompleteEvent,
-  PdfView,
-  PdfViewProps,
-  ResizeMode,
-} from './PdfView';
+import type { LoadCompleteEvent, PageDim, PdfViewProps, ResizeMode } from '.';
+import { PdfView } from '.';
 
 type AnimatedStyle = React.ComponentProps<typeof Animated.View>['style'];
-type ScrollViewRef = React.RefObject<ScrollView>;
+type ScrollViewInstance = Exclude<
+  React.ComponentRef<typeof Animated.ScrollView>,
+  { getNode(): unknown }
+>;
+type ScrollViewRef = React.RefObject<ScrollViewInstance | null>;
 
 export type PdfComponent = (props: PdfViewProps) => JSX.Element;
 
@@ -361,8 +348,8 @@ export function ZoomPdfView(props: ZoomPdfViewProps) {
   const [pdfSize, setPdfSize] = useState({ width: -1, height: -1 });
   const [viewSize, setViewSize] = useState({ width: 1, height: 1 });
 
-  const hScrollRef = useRef<ScrollView>(null);
-  const vScrollRef = useRef<ScrollView>(null);
+  const hScrollRef = useRef<ScrollViewInstance>(null);
+  const vScrollRef = useRef<ScrollViewInstance>(null);
 
   const RenderComponent = renderComponent ?? PdfView;
 
@@ -412,15 +399,19 @@ export function ZoomPdfView(props: ZoomPdfViewProps) {
   const hScrollGesture = useMemo(
     () =>
       Platform.OS === 'android'
-        ? Gesture.Native().requireExternalGestureToFail(gestureHandler)
-        : Gesture.Native(),
+        ? Gesture.Native()
+            .runOnJS(true)
+            .requireExternalGestureToFail(gestureHandler)
+        : Gesture.Native().runOnJS(true),
     [gestureHandler]
   );
   const vScrollGesture = useMemo(
     () =>
       Platform.OS === 'android'
-        ? Gesture.Native().requireExternalGestureToFail(gestureHandler)
-        : Gesture.Native(),
+        ? Gesture.Native()
+            .runOnJS(true)
+            .requireExternalGestureToFail(gestureHandler)
+        : Gesture.Native().runOnJS(true),
     [gestureHandler]
   );
   return (

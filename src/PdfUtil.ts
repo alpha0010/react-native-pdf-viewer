@@ -1,30 +1,21 @@
-import { NativeModules } from 'react-native';
+import NativePdfUtil from './NativePdfUtil';
 import { asPath } from './Util';
-
-export type PageDim = { height: number; width: number };
-
-type PdfUtilType = {
-  /**
-   * Get the number of pages of a pdf.
-   */
-  getPageCount(source: string): Promise<number>;
-
-  /**
-   * Get the dimensions of every page.
-   */
-  getPageSizes(source: string): Promise<PageDim[]>;
-};
-
-const PdfUtilNative: PdfUtilType = NativeModules.RNPdfUtil;
 
 /**
  * Utility pdf actions.
  */
-export const PdfUtil: PdfUtilType = {
+export const PdfUtil = {
+  /**
+   * Get the number of pages of a pdf.
+   */
   getPageCount(source: string) {
-    return PdfUtilNative.getPageCount(asPath(source));
+    return NativePdfUtil.getPageCount(asPath(source));
   },
+
+  /**
+   * Get the dimensions of every page.
+   */
   getPageSizes(source: string) {
-    return PdfUtilNative.getPageSizes(asPath(source));
+    return NativePdfUtil.getPageSizes(asPath(source));
   },
 };
