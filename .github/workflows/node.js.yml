@@ -24,9 +24,9 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: 24
-    - run: yarn
+    - run: YARN_IGNORE_PATH=1 yarn
       if: steps.cache-node.outputs.cache-hit != 'true'
-    - run: yarn lint
-    - run: yarn typecheck
-    - run: yarn test --coverage
-    - run: yarn prepare
+    - run: YARN_IGNORE_PATH=1 yarn lint
+    - run: YARN_IGNORE_PATH=1 yarn typecheck
+    - run: YARN_IGNORE_PATH=1 yarn test --coverage
+    - run: YARN_IGNORE_PATH=1 yarn prepare
