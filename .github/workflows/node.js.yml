@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ master ]
 
-env:
-  YARN_IGNORE_PATH: 1
-
 jobs:
   build:
 
