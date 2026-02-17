@@ -1,11 +1,9 @@
-const path = require('path');
-
 module.exports = {
-  dependencies: {
+  dependency: {
     platforms: {
       android: {
         componentDescriptors: ['PdfViewComponentDescriptor'],
-        cmakeListsPath: path.join(__dirname, 'android/CMakeLists.txt'),
+        cmakeListsPath: 'CMakeLists.txt',
       },
     },
   },
