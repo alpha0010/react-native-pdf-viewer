@@ -91,6 +91,11 @@ class PdfViewManager(private val pdfMutex: Lock) : SimpleViewManager<PdfView>(),
   @ReactProp(name = "source")
   override fun setSource(view: PdfView, source: String?) = view.setSource(source ?: "")
 
+  override fun imperativeApplyAnnotation(view: PdfView, annotation: String) {
+    view.setAnnotation(annotation, file = false)
+    view.renderPdf()
+  }
+
   companion object {
     const val NAME = "PdfView"
   }

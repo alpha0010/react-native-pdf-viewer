@@ -86,6 +86,15 @@ using namespace facebook::react;
     [super updateState:state oldState:oldState];
 }
 
+- (void)handleCommand:(nonnull const NSString *)commandName args:(nonnull const NSArray *)args {
+    RCTPdfViewHandleCommand(self, commandName, args);
+}
+
+- (void)imperativeApplyAnnotation:(NSString *)annotation
+{
+    [_view updatePropsWithAnnotStr:annotation];
+}
+
 Class<RCTComponentViewProtocol> PdfViewCls(void)
 {
     return PdfView.class;

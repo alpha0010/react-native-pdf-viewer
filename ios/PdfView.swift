@@ -47,6 +47,13 @@ public class PdfView: UIView {
         dispatcher(nextWidth, nextHeight)
     }
 
+    @objc public func updateProps(annotStr: String) {
+        if annotationStr != annotStr {
+            annotationStr = annotStr
+            renderPdf()
+        }
+    }
+
     @objc public func updateProps(annot: String, annotStr: String, pg: Int, rsMd: ResizeMode, src: String) {
         var isDirty = false
         var needsMeasure = false

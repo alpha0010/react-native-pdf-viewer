@@ -1,8 +1,5 @@
-import {
-  codegenNativeComponent,
-  type CodegenTypes,
-  type ViewProps,
-} from 'react-native';
+import type { CodegenTypes, HostComponent, ViewProps } from 'react-native';
+import { codegenNativeCommands, codegenNativeComponent } from 'react-native';
 
 export type ErrorEvent = { message: string };
 
@@ -22,6 +19,17 @@ interface NativeProps extends ViewProps {
   resizeMode?: CodegenTypes.WithDefault<ResizeMode, 'contain'>;
   source: string;
 }
+
+interface NativeCommands {
+  imperativeApplyAnnotation(
+    viewRef: React.ElementRef<HostComponent<NativeProps>>,
+    annotation: string
+  ): void;
+}
+
+export const Commands = codegenNativeCommands<NativeCommands>({
+  supportedCommands: ['imperativeApplyAnnotation'],
+});
 
 export default codegenNativeComponent<NativeProps>('PdfView', {
   interfaceOnly: true,

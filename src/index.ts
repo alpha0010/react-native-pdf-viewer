@@ -4,6 +4,7 @@ export type {
   ErrorEvent,
   LoadCompleteEvent,
   PdfViewProps,
+  PdfViewRef,
   ResizeMode,
 } from './PdfView';
 
