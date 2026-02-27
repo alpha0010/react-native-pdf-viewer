@@ -224,66 +224,61 @@ public class PdfView: UIView {
                 return
             }
 
-            UIGraphicsBeginImageContextWithOptions(currentFrame.size, true, 0.0)
-            guard let context = UIGraphicsGetCurrentContext() else {
-                UIGraphicsEndImageContext()
-                self.dispatchOnError(message: "Failed to open graphics context for rendering '\(self.source)'.")
-                return
-            }
-            context.saveGState()
+            var pageHeight: CGFloat = -1;
+            var pageWidth: CGFloat = -1;
+            let format = UIGraphicsImageRendererFormat()
+            format.opaque = true
+            let rendered = UIGraphicsImageRenderer(size: currentFrame.size, format: format).image { (uiCtx) in
+                let context = uiCtx.cgContext
+                context.saveGState()
 
-            // Default color for opaque context is black, so fill with white.
-            UIColor.white.setFill()
-            context.fill(currentFrame)
+                // Default color for opaque context is black, so fill with white.
+                UIColor.white.setFill()
+                context.fill(CGRect(origin: CGPoint(), size: currentFrame.size))
 
-            let pageBounds = pdfPage.getBoxRect(.cropBox)
-            let pageHeight: CGFloat;
-            let pageWidth: CGFloat;
-            if pdfPage.rotationAngle % 180 == 90 {
-                pageHeight = pageBounds.width
-                pageWidth = pageBounds.height
-            } else {
-                pageHeight = pageBounds.height
-                pageWidth = pageBounds.width
-            }
-            // Change context coordinate system to pdf coordinates.
-            let targetHeight = currentFrame.width * pageHeight / pageWidth
-            if self.resizeMode == ResizeMode.CONTAIN {
-                // Shift/resize so render is contained and centered in the context.
-                if targetHeight > currentFrame.height {
-                    let targetWidth = currentFrame.height * pageWidth / pageHeight
-                    context.translateBy(x: (currentFrame.width - targetWidth) / 2, y: 0.0)
-                    let scaleFactor = currentFrame.height / targetHeight
-                    context.scaleBy(x: scaleFactor, y: scaleFactor)
+                let pageBounds = pdfPage.getBoxRect(.cropBox)
+                if pdfPage.rotationAngle % 180 == 90 {
+                    pageHeight = pageBounds.width
+                    pageWidth = pageBounds.height
                 } else {
-                    context.translateBy(x: 0.0, y: (currentFrame.height - targetHeight) / 2)
+                    pageHeight = pageBounds.height
+                    pageWidth = pageBounds.width
                 }
+                // Change context coordinate system to pdf coordinates.
+                let targetHeight = currentFrame.width * pageHeight / pageWidth
+                if self.resizeMode == ResizeMode.CONTAIN {
+                    // Shift/resize so render is contained and centered in the context.
+                    if targetHeight > currentFrame.height {
+                        let targetWidth = currentFrame.height * pageWidth / pageHeight
+                        context.translateBy(x: (currentFrame.width - targetWidth) / 2, y: 0.0)
+                        let scaleFactor = currentFrame.height / targetHeight
+                        context.scaleBy(x: scaleFactor, y: scaleFactor)
+                    } else {
+                        context.translateBy(x: 0.0, y: (currentFrame.height - targetHeight) / 2)
+                    }
+                }
+                context.translateBy(x: 0.0, y: targetHeight)
+                context.scaleBy(x: currentFrame.width / pageWidth, y: -targetHeight / pageHeight)
+                context.concatenate(pdfPage.getDrawingTransform(
+                    .cropBox,
+                    rect: CGRect(x: 0.0, y: 0.0, width: pageWidth, height: pageHeight),
+                    rotate: 0,
+                    preserveAspectRatio: false
+                ))
+
+                context.interpolationQuality = .high
+                context.setRenderingIntent(.defaultIntent)
+                context.drawPDFPage(pdfPage)
+                context.restoreGState()
+
+                context.saveGState()
+                self.renderAnnotation(context, scaleX: currentFrame.width, scaleY: currentFrame.height)
+                context.restoreGState()
             }
-            context.translateBy(x: 0.0, y: targetHeight)
-            context.scaleBy(x: currentFrame.width / pageWidth, y: -targetHeight / pageHeight)
-            context.concatenate(pdfPage.getDrawingTransform(
-                .cropBox,
-                rect: CGRect(x: 0.0, y: 0.0, width: pageWidth, height: pageHeight),
-                rotate: 0,
-                preserveAspectRatio: false
-            ))
-
-            context.interpolationQuality = .high
-            context.setRenderingIntent(.defaultIntent)
-            context.drawPDFPage(pdfPage)
-            context.restoreGState()
-
-            context.saveGState()
-            self.renderAnnotation(context, scaleX: currentFrame.width, scaleY: currentFrame.height)
-            context.restoreGState()
-
-            let rendered = UIGraphicsGetImageFromCurrentImageContext()
-
-            UIGraphicsEndImageContext()
 
             DispatchQueue.main.async {
                 // Post new bitmap for display.
-                self.layer.contents = rendered?.cgImage
+                self.layer.contents = rendered.cgImage
             }
             self.dispatchOnLoadComplete(pageWidth: pageWidth, pageHeight: pageHeight)
         }
