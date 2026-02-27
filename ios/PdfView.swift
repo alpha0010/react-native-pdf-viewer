@@ -290,10 +290,13 @@ public class PdfView: UIView {
     }
 
     private func dispatchOnError(message: String) {
-        guard let dispatcher = onPdfError else {
-            return
+        // Queue message to give RN core a chance to init event emitters.
+        DispatchQueue.main.async {
+            guard let dispatcher = self.onPdfError else {
+                return
+            }
+            dispatcher(message)
         }
-        dispatcher(message)
     }
 
     private func dispatchOnLoadComplete(pageWidth: CGFloat, pageHeight: CGFloat) {

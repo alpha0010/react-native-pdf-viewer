@@ -35,14 +35,14 @@ using namespace facebook::react;
         __weak PdfView *weakSelf = self;
         _view.onPdfError = ^(NSString *message) {
             PdfView *strongSelf = weakSelf;
-            if (strongSelf) {
+            if (strongSelf && strongSelf->_eventEmitter) {
                 static_cast<const PdfViewEventEmitter &>(*strongSelf->_eventEmitter)
                     .onPdfError({[message UTF8String]});
             }
         };
         _view.onPdfLoadComplete = ^(NSInteger width, NSInteger height) {
             PdfView *strongSelf = weakSelf;
-            if (strongSelf) {
+            if (strongSelf && strongSelf->_eventEmitter) {
                 PdfViewEventEmitter::OnPdfLoadComplete evt;
                 evt.width = static_cast<int>(width);
                 evt.height = static_cast<int>(height);
