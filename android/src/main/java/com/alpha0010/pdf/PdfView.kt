@@ -56,6 +56,7 @@ class PdfView(
   private var mAnnotation = emptyList<AnnotationPage>()
   private val mBitmaps = MutableList(SLICES) { createBitmap(1, 1) }
   private var mDirty = false
+  private var mAnnotationDirty = false
   private var mPage = 0
   private var mPageMeasure = Size(1, 1)
   private var mResizeMode = ResizeMode.CONTAIN
@@ -132,7 +133,7 @@ class PdfView(
     if (source.isEmpty()) {
       if (mAnnotation.isNotEmpty()) {
         mAnnotation = emptyList()
-        mDirty = true
+        mAnnotationDirty = true
       }
       return
     }
@@ -143,7 +144,7 @@ class PdfView(
       } else {
         Json.decodeFromString(source)
       }
-      mDirty = true
+      mAnnotationDirty = true
     } catch (e: Exception) {
       onError("Failed to load annotation from '$source'. ${e.message}")
     }
@@ -228,13 +229,12 @@ class PdfView(
     }
   }
 
-  private fun renderAnnotation(bitmap: Bitmap) {
+  private fun renderAnnotation(ctx: Canvas) {
     if (mAnnotation.size <= mPage) {
       // No annotation data for current page.
       return
     }
     val metrics = resources.displayMetrics
-    val ctx = Canvas(bitmap)
     val paint = Paint()
 
     // Draw strokes.
@@ -248,7 +248,7 @@ class PdfView(
       }
       paint.color = parseColor(stroke.color)
       paint.strokeWidth = TypedValue.applyDimension(COMPLEX_UNIT_DIP, stroke.width, metrics)
-      ctx.drawPath(computePath(stroke.path, bitmap.width, bitmap.height), paint)
+      ctx.drawPath(computePath(stroke.path, ctx.width, ctx.height), paint)
     }
 
     // Draw text.
@@ -260,24 +260,34 @@ class PdfView(
     for (msg in mAnnotation[mPage].text) {
       paint.color = parseColor(msg.color)
       // Increase the font for larger views, but do so at a reduced rate.
-      val scaledFont = 9 + (msg.fontSize * bitmap.width) / factor
+      val scaledFont = 9 + (msg.fontSize * ctx.width) / factor
       paint.textSize = TypedValue.applyDimension(COMPLEX_UNIT_DIP, scaledFont, metrics)
       paint.getTextBounds(msg.str, 0, msg.str.length, bounds)
       ctx.drawText(
         msg.str,
-        bitmap.width * msg.point[0],
-        bitmap.height * msg.point[1] - bounds.top,
+        ctx.width * msg.point[0],
+        ctx.height * msg.point[1] - bounds.top,
         paint
       )
     }
   }
 
   fun renderPdf() {
-    if (height < 1 || width < 1 || mSource.isEmpty() || !mDirty) {
+    if (height < 1 || width < 1 || mSource.isEmpty()) {
       // View layout not yet complete, or nothing to render.
       return
     }
+    if (!mDirty) {
+      if (mAnnotationDirty) {
+        // Only annotations changed, keep cached pdf render.
+        postInvalidate()
+      }
+      mAnnotationDirty = false
+      return
+    }
+
     mDirty = false
+    mAnnotationDirty = false
 
     CoroutineScope(Dispatchers.Main).launch(Dispatchers.IO) {
       val file = File(mSource)
@@ -344,8 +354,6 @@ class PdfView(
         return@withLock rendered
       }
       fd.close()
-
-      renderAnnotation(bitmap)
 
       withContext(Dispatchers.Main) {
         // Post new bitmap for display.
@@ -425,6 +433,7 @@ class PdfView(
         canvas.drawBitmap(bitmap, null, viewRect, null)
       }
     }
+    renderAnnotation(canvas)
   }
 
   override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
