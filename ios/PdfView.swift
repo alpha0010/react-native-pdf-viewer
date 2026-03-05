@@ -66,6 +66,12 @@ public class PdfView: UIView {
         }
     }
 
+    @objc public func prepareForRecycle() {
+        source = ""
+        resizeMode = ResizeMode.CONTAIN
+        previousBounds = .zero
+    }
+
     @objc public func updateProps(annot: String, annotStr: String, pg: Int, rsMd: ResizeMode, src: String) {
         var isDirty = false
         var needsMeasure = false

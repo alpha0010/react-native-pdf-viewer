@@ -65,6 +65,12 @@ using namespace facebook::react;
     return self;
 }
 
+- (void)prepareForRecycle
+{
+    [super prepareForRecycle];
+    [_view prepareForRecycle];
+}
+
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
     const auto &newViewProps = *std::static_pointer_cast<PdfViewProps const>(props);
