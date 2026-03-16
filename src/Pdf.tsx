@@ -14,6 +14,8 @@ import type {
   ListRenderItemInfo,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  StyleProp,
+  ViewStyle,
 } from 'react-native';
 
 import type { PageDim } from './NativePdfUtil';
@@ -36,6 +38,12 @@ export type PageMeasurement = {
  * Optional props, forwarded to the underlying `FlatList` component.
  */
 type BaseListProps = {
+  /**
+   * These styles will be applied to the scroll view content container which
+   * wraps all of the child views.
+   */
+  contentContainerStyle?: StyleProp<ViewStyle>;
+
   /**
    * Instead of starting at the top with the first item, start at
    * initialScrollIndex.
@@ -333,6 +341,7 @@ export const Pdf = forwardRef((props: PdfProps, ref: Ref<PdfRef>) => {
 
   return (
     <FlatList
+      contentContainerStyle={props.contentContainerStyle}
       data={
         flatListLayout.height !== 0 || pageDims.length === 0 ? pageDims : []
       }

@@ -86,6 +86,7 @@ Props:
 
 The following props are forwarded to the underlying
 [`FlatList`](https://reactnative.dev/docs/flatlist) component:
+- `contentContainerStyle`
 - `initialScrollIndex`
 - `ListEmptyComponent`
 - `onMomentumScrollBegin`
