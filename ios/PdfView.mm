@@ -86,7 +86,6 @@ using namespace facebook::react;
 
 - (void)updateState:(const facebook::react::State::Shared &)state oldState:(const facebook::react::State::Shared &)oldState
 {
-    _view.readyToRender = oldState != nullptr; // Skip render until measurements sent to shadow node.
     _state = std::static_pointer_cast<const PdfViewShadowNode::ConcreteState>(state);
     [_view measurePdf];
     [super updateState:state oldState:oldState];

@@ -273,7 +273,7 @@ class PdfView(
   }
 
   fun renderPdf() {
-    if (height < 1 || width < 1 || mSource.isEmpty()) {
+    if (height < 2 || width < 2 || mSource.isEmpty()) {
       // View layout not yet complete, or nothing to render.
       return
     }

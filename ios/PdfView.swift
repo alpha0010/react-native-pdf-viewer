@@ -10,8 +10,6 @@ public class PdfView: UIView {
     private var resizeMode = ResizeMode.CONTAIN
     private var source = ""
 
-    @objc public var readyToRender = false
-
     public typealias PdfErrorHandler = (String) -> Void
     @objc public var onPdfError: PdfErrorHandler?
 
@@ -20,7 +18,7 @@ public class PdfView: UIView {
     @objc public var onPdfMeasure: PdfPageSizeHandler?
 
     private let annotLayer: AnnotationView
-    private var previousBounds: CGRect = .zero
+    private var previousSize: CGSize = .zero
 
     public override init(frame: CGRect) {
         annotLayer = AnnotationView()
@@ -69,7 +67,7 @@ public class PdfView: UIView {
     @objc public func prepareForRecycle() {
         source = ""
         resizeMode = ResizeMode.CONTAIN
-        previousBounds = .zero
+        previousSize = .zero
     }
 
     @objc public func updateProps(annot: String, annotStr: String, pg: Int, rsMd: ResizeMode, src: String) {
@@ -105,9 +103,9 @@ public class PdfView: UIView {
     }
 
     public override func layoutSubviews() {
-        if bounds != previousBounds {
+        if bounds.size != previousSize {
+            previousSize = bounds.size
             renderPdf()
-            previousBounds = bounds
             annotLayer.setNeedsDisplay()
         }
         super.layoutSubviews()
@@ -137,12 +135,12 @@ public class PdfView: UIView {
     }
 
     private func renderPdf() {
-        guard !frame.isEmpty && !source.isEmpty && readyToRender else {
+        guard bounds.width > 2 && bounds.height > 2 && !source.isEmpty else {
             // View layout not yet complete, or nothing to render.
             return
         }
 
-        let currentFrame = frame
+        var currentSize = bounds.size
         DispatchQueue.global().async {
             let url = URL(fileURLWithPath: self.source)
             guard let pdf = CGPDFDocument(url as CFURL) else {
@@ -154,60 +152,81 @@ public class PdfView: UIView {
                 return
             }
 
-            var pageHeight: CGFloat = -1;
-            var pageWidth: CGFloat = -1;
-            let format = UIGraphicsImageRendererFormat()
-            format.opaque = true
-            let rendered = UIGraphicsImageRenderer(size: currentFrame.size, format: format).image { (uiCtx) in
-                let context = uiCtx.cgContext
-                context.saveGState()
-
-                // Default color for opaque context is black, so fill with white.
-                UIColor.white.setFill()
-                context.fill(CGRect(origin: CGPoint(), size: currentFrame.size))
-
-                let pageBounds = pdfPage.getBoxRect(.cropBox)
-                if pdfPage.rotationAngle % 180 == 90 {
-                    pageHeight = pageBounds.width
-                    pageWidth = pageBounds.height
-                } else {
-                    pageHeight = pageBounds.height
-                    pageWidth = pageBounds.width
-                }
-                // Change context coordinate system to pdf coordinates.
-                let targetHeight = currentFrame.width * pageHeight / pageWidth
-                if self.resizeMode == ResizeMode.CONTAIN {
-                    // Shift/resize so render is contained and centered in the context.
-                    if targetHeight > currentFrame.height {
-                        let targetWidth = currentFrame.height * pageWidth / pageHeight
-                        context.translateBy(x: (currentFrame.width - targetWidth) / 2, y: 0.0)
-                        let scaleFactor = currentFrame.height / targetHeight
-                        context.scaleBy(x: scaleFactor, y: scaleFactor)
+            // TODO: Is it possible to know when layout has stabilized, to
+            // avoid guess-and-check rendering?
+            for _ in 1...4 {
+                let (pageHeight, pageWidth, rendered) = self.doRenderPage(currentSize: currentSize, pdfPage: pdfPage)
+                var abort = false
+                var success = false
+                DispatchQueue.main.sync {
+                    if self.bounds.width < 2 || self.bounds.height < 2 {
+                        abort = true
+                    } else if self.bounds.size == currentSize {
+                        success = true
+                        self.layer.contents = rendered.cgImage
                     } else {
-                        context.translateBy(x: 0.0, y: (currentFrame.height - targetHeight) / 2)
+                        currentSize = self.bounds.size
                     }
                 }
-                context.translateBy(x: 0.0, y: targetHeight)
-                context.scaleBy(x: currentFrame.width / pageWidth, y: -targetHeight / pageHeight)
-                context.concatenate(pdfPage.getDrawingTransform(
-                    .cropBox,
-                    rect: CGRect(x: 0.0, y: 0.0, width: pageWidth, height: pageHeight),
-                    rotate: 0,
-                    preserveAspectRatio: false
-                ))
-
-                context.interpolationQuality = .high
-                context.setRenderingIntent(.defaultIntent)
-                context.drawPDFPage(pdfPage)
-                context.restoreGState()
+                if abort {
+                    break
+                } else if success {
+                    self.dispatchOnLoadComplete(pageWidth: pageWidth, pageHeight: pageHeight)
+                    break
+                }
             }
-
-            DispatchQueue.main.async {
-                // Post new bitmap for display.
-                self.layer.contents = rendered.cgImage
-            }
-            self.dispatchOnLoadComplete(pageWidth: pageWidth, pageHeight: pageHeight)
         }
+    }
+
+    private func doRenderPage(currentSize: CGSize, pdfPage: CGPDFPage) -> (CGFloat, CGFloat, UIImage) {
+        var pageHeight: CGFloat = -1;
+        var pageWidth: CGFloat = -1;
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = true
+        let rendered = UIGraphicsImageRenderer(size: currentSize, format: format).image { (uiCtx) in
+            let context = uiCtx.cgContext
+            context.saveGState()
+
+            // Default color for opaque context is black, so fill with white.
+            UIColor.white.setFill()
+            context.fill(CGRect(origin: CGPoint(), size: currentSize))
+
+            let pageBounds = pdfPage.getBoxRect(.cropBox)
+            if pdfPage.rotationAngle % 180 == 90 {
+                pageHeight = pageBounds.width
+                pageWidth = pageBounds.height
+            } else {
+                pageHeight = pageBounds.height
+                pageWidth = pageBounds.width
+            }
+            // Change context coordinate system to pdf coordinates.
+            let targetHeight = currentSize.width * pageHeight / pageWidth
+            if self.resizeMode == ResizeMode.CONTAIN {
+                // Shift/resize so render is contained and centered in the context.
+                if targetHeight > currentSize.height {
+                    let targetWidth = currentSize.height * pageWidth / pageHeight
+                    context.translateBy(x: (currentSize.width - targetWidth) / 2, y: 0.0)
+                    let scaleFactor = currentSize.height / targetHeight
+                    context.scaleBy(x: scaleFactor, y: scaleFactor)
+                } else {
+                    context.translateBy(x: 0.0, y: (currentSize.height - targetHeight) / 2)
+                }
+            }
+            context.translateBy(x: 0.0, y: targetHeight)
+            context.scaleBy(x: currentSize.width / pageWidth, y: -targetHeight / pageHeight)
+            context.concatenate(pdfPage.getDrawingTransform(
+                .cropBox,
+                rect: CGRect(x: 0.0, y: 0.0, width: pageWidth, height: pageHeight),
+                rotate: 0,
+                preserveAspectRatio: false
+            ))
+
+            context.interpolationQuality = .high
+            context.setRenderingIntent(.defaultIntent)
+            context.drawPDFPage(pdfPage)
+            context.restoreGState()
+        }
+        return (pageHeight, pageWidth, rendered)
     }
 
     private func dispatchOnError(message: String) {
