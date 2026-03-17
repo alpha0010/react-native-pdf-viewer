@@ -1,7 +1,13 @@
 #import "PdfView.h"
-#import "react_native_pdf_light-Swift.h"
 
+#if __has_include(<react_native_pdf_light/react_native_pdf_light-Swift.h>)
+#import <react_native_pdf_light/react_native_pdf_light-Swift.h>
+#import <react_native_pdf_light/react/renderer/components/PdfViewSpec/ComponentDescriptors.h>
+#else
+#import "react_native_pdf_light-Swift.h"
 #import <react/renderer/components/PdfViewSpec/ComponentDescriptors.h>
+#endif
+
 #import <react/renderer/components/PdfViewSpec/EventEmitters.h>
 #import <react/renderer/components/PdfViewSpec/Props.h>
 #import <react/renderer/components/PdfViewSpec/RCTComponentViewHelpers.h>

@@ -1,5 +1,10 @@
 #import "PdfUtilModule.h"
+
+#if __has_include(<react_native_pdf_light/react_native_pdf_light-Swift.h>)
+#import <react_native_pdf_light/react_native_pdf_light-Swift.h>
+#else
 #import "react_native_pdf_light-Swift.h"
+#endif
 
 @implementation PdfUtilModule {
     PdfUtilModuleImpl *impl;
