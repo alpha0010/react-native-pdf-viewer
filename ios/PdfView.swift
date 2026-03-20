@@ -4,8 +4,8 @@
 
 @objc(PdfViewImpl)
 public class PdfView: UIView {
-    private var annotation = "" { didSet { loadAnnotation(file: true) } }
-    private var annotationStr = "" { didSet { loadAnnotation(file: false) } }
+    private var annotation = ""
+    private var annotationStr = ""
     private var page = 0
     private var resizeMode = ResizeMode.CONTAIN
     private var source = ""
@@ -60,7 +60,7 @@ public class PdfView: UIView {
     @objc public func updateProps(annotStr: String) {
         if annotationStr != annotStr {
             annotationStr = annotStr
-            renderPdf()
+            loadAnnotation(file: false)
         }
     }
 
@@ -68,6 +68,9 @@ public class PdfView: UIView {
         source = ""
         resizeMode = ResizeMode.CONTAIN
         previousSize = .zero
+        annotation = ""
+        annotationStr = ""
+        annotLayer.setAnnotationData([])
     }
 
     @objc public func updateProps(annot: String, annotStr: String, pg: Int, rsMd: ResizeMode, src: String) {
@@ -75,9 +78,11 @@ public class PdfView: UIView {
         var needsMeasure = false
         if annotation != annot {
             annotation = annot
+            loadAnnotation(file: true)
         }
         if annotationStr != annotStr {
             annotationStr = annotStr
+            loadAnnotation(file: false)
         }
         if page != pg {
             page = pg
