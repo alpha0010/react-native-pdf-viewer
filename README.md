@@ -126,6 +126,8 @@ display mode.
 
 Props:
 - All props from `PdfView`
+- `insets: { top: number; right: number; bottom: number; left: number }`
+  - Optional: Content padding for safe area handling.
 - `onZoomIn: () => void`
   - Optional: Callback when view starts to zoom.
 - `onZoomReset: () => void`
