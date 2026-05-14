@@ -268,7 +268,7 @@ export const Pdf = forwardRef((props: PdfProps, ref: Ref<PdfRef>) => {
   );
 
   const getItemLayout = useCallback(
-    (data: Readonly<ArrayLike<PageDim>> | undefined, index: number) => {
+    (data: Readonly<ArrayLike<PageDim>> | null | undefined, index: number) => {
       // Default height, so layout computation will always return non-zero.
       // This case should never occur.
       let itemHeight = 100;
