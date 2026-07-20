@@ -1,11 +1,10 @@
-import { useCallback } from 'react';
-import type {
+import React, { useCallback } from 'react';
+import {
   LayoutChangeEvent,
   NativeSyntheticEvent,
+  requireNativeComponent,
   ViewStyle,
 } from 'react-native';
-
-import PdfViewNative from './PdfViewNativeComponent';
 import { asPath } from './Util';
 
 export type ErrorEvent = { message: string };
@@ -13,6 +12,18 @@ export type ErrorEvent = { message: string };
 export type LoadCompleteEvent = { height: number; width: number };
 
 export type ResizeMode = 'contain' | 'fitWidth';
+
+type PdfViewNativeProps = {
+  annotation?: string;
+  annotationStr?: string;
+  onLayout?: (event: LayoutChangeEvent) => void;
+  onPdfError: (event: NativeSyntheticEvent<ErrorEvent>) => void;
+  onPdfLoadComplete: (event: NativeSyntheticEvent<LoadCompleteEvent>) => void;
+  page: number;
+  resizeMode?: ResizeMode;
+  source: string;
+  style?: ViewStyle;
+};
 
 export type PdfViewProps = {
   /**
@@ -72,6 +83,8 @@ export type PdfViewProps = {
    */
   testID?: string;
 };
+
+const PdfViewNative = requireNativeComponent<PdfViewNativeProps>('RNPdfView');
 
 /**
  * Single page of a pdf.

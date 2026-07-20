@@ -1,3 +1,4 @@
+import React from 'react';
 import { act, render } from '@testing-library/react-native';
 import { Pdf } from '../Pdf';
 import { PdfUtil } from '../PdfUtil';

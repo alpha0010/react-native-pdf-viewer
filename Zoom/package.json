@@ -1,0 +1,6 @@
+{
+  "main": "../lib/commonjs/ZoomPdfView",
+  "module": "../lib/module/ZoomPdfView",
+  "react-native": "../src/ZoomPdfView",
+  "types": "../lib/typescript/ZoomPdfView.d.ts"
+}

@@ -1,86 +1,22 @@
-@objc public enum ResizeMode: Int {
-    case CONTAIN, FIT_WIDTH
+enum ResizeMode: String {
+    case CONTAIN = "contain"
+    case FIT_WIDTH = "fitWidth"
 }
 
-@objc(PdfViewImpl)
-public class PdfView: UIView {
-    private var annotation = "" { didSet { loadAnnotation(file: true) } }
-    private var annotationStr = "" { didSet { loadAnnotation(file: false) } }
-    private var page = 0
-    private var resizeMode = ResizeMode.CONTAIN
-    private var source = ""
-
-    @objc public var readyToRender = false
-
-    public typealias PdfErrorHandler = (String) -> Void
-    @objc public var onPdfError: PdfErrorHandler?
-
-    public typealias PdfPageSizeHandler = (Int, Int) -> Void
-    @objc public var onPdfLoadComplete: PdfPageSizeHandler?
-    @objc public var onPdfMeasure: PdfPageSizeHandler?
+class PdfView: UIView {
+    @objc var annotationStr = "" { didSet { loadAnnotation(file: false) } }
+    @objc var annotation = "" { didSet { loadAnnotation(file: true) } }
+    @objc var page: NSNumber = 0 { didSet { renderPdf() } }
+    @objc var resizeMode = ResizeMode.CONTAIN.rawValue { didSet { validateResizeMode() } }
+    @objc var source = "" { didSet { renderPdf() } }
+    @objc var onPdfError: RCTBubblingEventBlock?
+    @objc var onPdfLoadComplete: RCTBubblingEventBlock?
 
     private var annotationData = [AnnotationPage]()
     private var previousBounds: CGRect = .zero
+    private var realResizeMode = ResizeMode.CONTAIN
 
-    @objc public func measurePdf() {
-        guard !source.isEmpty, let dispatcher = onPdfMeasure else {
-            return
-        }
-        let url = URL(fileURLWithPath: source)
-        guard let pdf = CGPDFDocument(url as CFURL) else {
-            return
-        }
-        guard let pdfPage = pdf.page(at: page + 1) else {
-            return
-        }
-        // Apply crop and rotation to dimensions.
-        let pageBounds = pdfPage.getBoxRect(.cropBox)
-        let nextWidth: Int
-        let nextHeight: Int
-        if pdfPage.rotationAngle % 180 == 90 {
-            nextWidth = Int(pageBounds.height.rounded())
-            nextHeight = Int(pageBounds.width.rounded())
-        } else {
-            nextWidth = Int(pageBounds.width.rounded())
-            nextHeight = Int(pageBounds.height.rounded())
-        }
-        dispatcher(nextWidth, nextHeight)
-    }
-
-    @objc public func updateProps(annot: String, annotStr: String, pg: Int, rsMd: ResizeMode, src: String) {
-        var isDirty = false
-        var needsMeasure = false
-        if annotation != annot {
-            annotation = annot
-            isDirty = true
-        }
-        if annotationStr != annotStr {
-            annotationStr = annotStr
-            isDirty = true
-        }
-        if page != pg {
-            page = pg
-            isDirty = true
-            needsMeasure = true
-        }
-        if resizeMode != rsMd {
-            resizeMode = rsMd
-            isDirty = true
-        }
-        if source != src {
-            source = src
-            isDirty = true
-            needsMeasure = true
-        }
-        if needsMeasure {
-            measurePdf()
-        }
-        if isDirty {
-            renderPdf()
-        }
-    }
-
-    public override func layoutSubviews() {
+    override func layoutSubviews() {
         if bounds != previousBounds {
             renderPdf()
             previousBounds = bounds
@@ -92,6 +28,7 @@ public class PdfView: UIView {
         guard !annotation.isEmpty || !annotationStr.isEmpty else {
             if !annotationData.isEmpty {
                 annotationData.removeAll()
+                renderPdf()
             }
             return
         }
@@ -101,7 +38,8 @@ public class PdfView: UIView {
             let data: Data;
             if (file) {
                 data = try Data(contentsOf: URL(fileURLWithPath: annotation))
-            } else {
+            }
+            else {
                 data = annotationStr.data(using: .utf8)!;
             }
             annotationData = try decoder.decode([AnnotationPage].self, from: data)
@@ -111,6 +49,17 @@ public class PdfView: UIView {
             )
             return
         }
+        renderPdf()
+    }
+
+    private func validateResizeMode() {
+        guard let resizeEnum = ResizeMode(rawValue: resizeMode) else {
+            dispatchOnError(message: "Unknown resizeMode '\(resizeMode)'.")
+            return
+        }
+
+        realResizeMode = resizeEnum
+        renderPdf()
     }
 
     private func parseColor(_ hex: String) -> UIColor {
@@ -164,11 +113,11 @@ public class PdfView: UIView {
     }
 
     private func renderAnnotation(_ context: CGContext, scaleX: CGFloat, scaleY: CGFloat) {
-        guard page < annotationData.count else {
+        guard page.intValue < annotationData.count else {
             // No annotation data for current page.
             return
         }
-        let annotationPage = annotationData[page]
+        let annotationPage = annotationData[page.intValue]
 
         // Draw strokes.
         context.setLineCap(.round)
@@ -200,7 +149,7 @@ public class PdfView: UIView {
     }
 
     private func renderPdf() {
-        guard !frame.isEmpty && !source.isEmpty && readyToRender else {
+        guard !frame.isEmpty && !source.isEmpty else {
             // View layout not yet complete, or nothing to render.
             return
         }
@@ -212,7 +161,7 @@ public class PdfView: UIView {
                 self.dispatchOnError(message: "Failed to open '\(self.source)' for reading.")
                 return
             }
-            guard let pdfPage = pdf.page(at: self.page + 1) else {
+            guard let pdfPage = pdf.page(at: self.page.intValue + 1) else {
                 self.dispatchOnError(message: "Failed to open page '\(self.page)' of '\(self.source)' for reading.")
                 return
             }
@@ -241,7 +190,7 @@ public class PdfView: UIView {
             }
             // Change context coordinate system to pdf coordinates.
             let targetHeight = currentFrame.width * pageHeight / pageWidth
-            if self.resizeMode == ResizeMode.CONTAIN {
+            if self.realResizeMode == ResizeMode.CONTAIN {
                 // Shift/resize so render is contained and centered in the context.
                 if targetHeight > currentFrame.height {
                     let targetWidth = currentFrame.height * pageWidth / pageHeight
@@ -286,13 +235,13 @@ public class PdfView: UIView {
         guard let dispatcher = onPdfError else {
             return
         }
-        dispatcher(message)
+        dispatcher(["message": message])
     }
 
     private func dispatchOnLoadComplete(pageWidth: CGFloat, pageHeight: CGFloat) {
         guard let dispatcher = onPdfLoadComplete else {
             return
         }
-        dispatcher(Int(pageWidth.rounded()), Int(pageHeight.rounded()))
+        dispatcher(["width": pageWidth, "height": pageHeight])
     }
 }

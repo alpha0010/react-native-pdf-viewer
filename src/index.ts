@@ -1,12 +1,9 @@
-export type { PageDim } from './NativePdfUtil';
-export type { PageMeasurement, PdfRef } from './Pdf';
-export type {
+export { PageMeasurement, Pdf, PdfRef } from './Pdf';
+export { PageDim, PdfUtil } from './PdfUtil';
+export {
   ErrorEvent,
   LoadCompleteEvent,
+  PdfView,
   PdfViewProps,
   ResizeMode,
 } from './PdfView';
-
-export { Pdf } from './Pdf';
-export { PdfUtil } from './PdfUtil';
-export { PdfView } from './PdfView';

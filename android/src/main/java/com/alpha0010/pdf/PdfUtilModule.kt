@@ -2,20 +2,21 @@ package com.alpha0010.pdf
 
 import android.graphics.pdf.PdfRenderer
 import android.os.ParcelFileDescriptor
-import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactApplicationContext
-import java.io.File
-import java.io.FileNotFoundException
+import com.facebook.react.bridge.*
+import java.io.*
 import java.util.concurrent.locks.Lock
 import kotlin.concurrent.withLock
 
-class PdfUtilModule(reactContext: ReactApplicationContext, private val pdfMutex: Lock) :
-  NativePdfUtilSpec(reactContext) {
+class PdfUtilModule(reactContext: ReactApplicationContext, private val pdfMutex: Lock) : ReactContextBaseJavaModule(reactContext) {
+  override fun getName(): String {
+    return "RNPdfUtil"
+  }
+
   /**
    * Get the number of pages of a pdf.
    */
-  override fun getPageCount(source: String, promise: Promise) {
+  @ReactMethod
+  fun getPageCount(source: String, promise: Promise) {
     val file = File(source)
     val fd: ParcelFileDescriptor
     try {
@@ -45,7 +46,8 @@ class PdfUtilModule(reactContext: ReactApplicationContext, private val pdfMutex:
   /**
    * Get the dimensions of every page.
    */
-  override fun getPageSizes(source: String, promise: Promise) {
+  @ReactMethod
+  fun getPageSizes(source: String, promise: Promise) {
     val file = File(source)
     val fd = try {
       ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)

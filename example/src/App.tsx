@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dirs, FileSystem } from 'react-native-file-access';
 import { Pdf } from 'react-native-pdf-light';
 
