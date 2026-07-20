@@ -1,15 +1,10 @@
-@objc(PdfUtilModule)
-class PdfUtilModule: NSObject {
-    @objc
-    static func requiresMainQueueSetup() -> Bool {
-        return false
-    }
-
+@objc(PdfUtilModuleImpl)
+public class PdfUtilModule: NSObject {
     /**
      * Get the number of pages of a pdf.
      */
-    @objc(getPageCount:withResolver:withRejecter:)
-    func getPageCount(source: String, resolve:RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {
+    @objc
+    public func getPageCount(source: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         let url = URL(fileURLWithPath: source)
         guard let pdf = CGPDFDocument(url as CFURL) else {
             reject("ENOENT", "Unable to read pdf \(source)", nil)
@@ -21,8 +16,8 @@ class PdfUtilModule: NSObject {
     /**
      * Get the dimensions of every page.
      */
-    @objc(getPageSizes:withResolver:withRejecter:)
-    func getPageSizes(source: String, resolve:RCTPromiseResolveBlock, reject:RCTPromiseRejectBlock) -> Void {
+    @objc
+    public func getPageSizes(source: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) -> Void {
         let url = URL(fileURLWithPath: source)
         guard let pdf = CGPDFDocument(url as CFURL) else {
             reject("ENOENT", "Unable to read pdf \(source)", nil)

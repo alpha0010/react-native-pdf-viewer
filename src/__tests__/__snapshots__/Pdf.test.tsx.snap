@@ -3,29 +3,26 @@
 exports[`renders pdf viewer 1`] = `
 <RCTScrollView
   ItemSeparatorComponent={[Function]}
-  data={Array []}
-  disableVirtualization={false}
+  data={[]}
   getItem={[Function]}
   getItemCount={[Function]}
   getItemLayout={[Function]}
-  horizontal={false}
   initialNumToRender={1}
   keyExtractor={[Function]}
   maxToRenderPerBatch={2}
   onContentSizeChange={[Function]}
-  onEndReachedThreshold={2}
   onLayout={[Function]}
+  onMomentumScrollBegin={[Function]}
   onMomentumScrollEnd={[Function]}
   onScroll={[Function]}
   onScrollBeginDrag={[Function]}
   onScrollEndDrag={[Function]}
   removeClippedSubviews={false}
   renderItem={[Function]}
-  scrollEventThrottle={50}
-  stickyHeaderIndices={Array []}
+  scrollEventThrottle={0.0001}
+  stickyHeaderIndices={[]}
   testID="pdfFlatList"
-  updateCellsBatchingPeriod={50}
-  viewabilityConfigCallbackPairs={Array []}
+  viewabilityConfigCallbackPairs={[]}
   windowSize={5}
 >
   <View />
@@ -35,28 +32,28 @@ exports[`renders pdf viewer 1`] = `
 exports[`viewer renders pages 1`] = `
 <View
   style={
-    Array [
-      Object {
+    [
+      {
         "alignItems": "center",
       },
-      Object {
+      {
         "maxHeight": undefined,
       },
     ]
   }
 >
   <View>
-    <RNPdfView
+    <PdfView
       onPdfError={[Function]}
       onPdfLoadComplete={[Function]}
       page={0}
       source="test.pdf"
       style={
-        Object {
+        {
           "backgroundColor": "#fff",
           "elevation": 4,
           "shadowColor": "#000",
-          "shadowOffset": Object {
+          "shadowOffset": {
             "height": 2,
             "width": 0,
           },
@@ -72,28 +69,28 @@ exports[`viewer renders pages 1`] = `
 exports[`viewer renders pages URI source 1`] = `
 <View
   style={
-    Array [
-      Object {
+    [
+      {
         "alignItems": "center",
       },
-      Object {
+      {
         "maxHeight": undefined,
       },
     ]
   }
 >
   <View>
-    <RNPdfView
+    <PdfView
       onPdfError={[Function]}
       onPdfLoadComplete={[Function]}
       page={0}
       source="/path/to/test.pdf"
       style={
-        Object {
+        {
           "backgroundColor": "#fff",
           "elevation": 4,
           "shadowColor": "#000",
-          "shadowOffset": Object {
+          "shadowOffset": {
             "height": 2,
             "width": 0,
           },
