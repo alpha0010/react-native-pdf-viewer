@@ -1,3 +1,4 @@
+#import <React/RCTBridgeModule.h>
 #import "PdfView.h"
 
 #if __has_include(<react_native_pdf_light/react_native_pdf_light-Swift.h>)
